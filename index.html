@@ -1,0 +1,1251 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>CargoMind — AI Supply Chain Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root{
+  --g1:#080808;--g2:#0f0f0f;--g3:#161616;--g4:#1e1e1e;--g5:#282828;
+  --g6:#3a3a3a;--g7:#555;--g8:#777;--g9:#999;--ga:#bbb;--gb:#e0e0e0;
+  --border:rgba(255,255,255,.055);--border2:rgba(255,255,255,.1);--border3:rgba(255,255,255,.17);
+  --red:#d63535;--yellow:#c49a0a;--green:#1f9e4a;
+  --text:#dedede;--text2:#777;
+  --fh:'Syne',sans-serif;--fm:'JetBrains Mono',monospace;
+  --r:8px;--r2:5px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{scroll-behavior:smooth;}
+body{background:var(--g1);color:var(--text);font-family:var(--fh);min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:2px;}::-webkit-scrollbar-track{background:var(--g2);}::-webkit-scrollbar-thumb{background:var(--g6);}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);background-size:56px 56px;pointer-events:none;z-index:0;}
+.hidden{display:none!important;}
+.z1{position:relative;z-index:1;}
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--fh);font-weight:700;cursor:pointer;transition:all .16s;border:none;letter-spacing:.02em;text-decoration:none;font-size:12px;}
+.btn-p{background:#fff;color:#000;padding:10px 22px;border-radius:var(--r);}
+.btn-p:hover{background:#d8d8d8;transform:translateY(-1px);}
+.btn-g{background:transparent;border:1px solid var(--border2);color:var(--text2);padding:10px 22px;border-radius:var(--r);}
+.btn-g:hover{border-color:#fff;color:#fff;}
+.btn-sm{padding:6px 14px;font-size:11px;border-radius:var(--r2);}
+.btn-xs{padding:4px 10px;font-size:10px;border-radius:var(--r2);}
+.btn-full{width:100%;justify-content:center;padding:12px;border-radius:var(--r);}
+.btn-lg{padding:13px 32px;font-size:14px;border-radius:var(--r);}
+.btn-danger{background:rgba(214,53,53,.09);border:1px solid rgba(214,53,53,.22);color:var(--red);}
+.btn-warn{background:rgba(196,154,10,.07);border:1px solid rgba(196,154,10,.2);color:var(--yellow);}
+.btn-safe{background:rgba(31,158,74,.07);border:1px solid rgba(31,158,74,.18);color:var(--green);}
+.btn-outline{background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text2);}
+.btn-outline:hover{border-color:var(--border3);color:#fff;}
+.logo-wrap{display:flex;align-items:center;gap:9px;}
+.logo-text{font-family:var(--fh);font-size:17px;font-weight:800;letter-spacing:-.4px;color:#fff;}
+.logo-text span{color:var(--g7);}
+.lnav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:56px;background:rgba(8,8,8,.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.lnav-links{display:flex;gap:28px;}
+.lnav-links a{color:var(--text2);font-size:13px;text-decoration:none;transition:color .16s;font-weight:600;}
+.lnav-links a:hover{color:#fff;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.15;}}
+.live-pulse{width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 1.6s infinite;flex-shrink:0;}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px 24px 80px;position:relative;z-index:1;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--g3);border:1px solid var(--border2);border-radius:100px;padding:5px 16px;margin-bottom:28px;font-family:var(--fm);font-size:10px;color:var(--g8);letter-spacing:2px;text-transform:uppercase;}
+.hero h1{font-size:clamp(42px,6vw,84px);font-weight:800;line-height:.94;letter-spacing:-3px;max-width:820px;margin-bottom:22px;}
+.hero p{font-size:15px;color:var(--text2);max-width:440px;line-height:1.75;margin-bottom:44px;}
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:68px;}
+.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border2);border-radius:var(--r);overflow:hidden;max-width:640px;width:100%;}
+.hs-item{padding:18px 12px;text-align:center;border-right:1px solid var(--border);}
+.hs-item:last-child{border-right:none;}
+.hs-val{font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;}
+.hs-lbl{font-size:9px;color:var(--g8);font-family:var(--fm);letter-spacing:.5px;}
+.lsec{padding:72px 48px;max-width:1200px;margin:0 auto;position:relative;z-index:1;}
+.sec-tag{font-family:var(--fm);font-size:9px;color:var(--g8);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;}
+.sec-h{font-size:clamp(24px,3vw,40px);font-weight:800;letter-spacing:-1.5px;margin-bottom:14px;}
+.sec-sub{font-size:13px;color:var(--g8);max-width:420px;line-height:1.75;}
+.sig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-top:36px;background:var(--border);}
+.sig-card{background:var(--g2);padding:16px;transition:background .16s;}
+.sig-card:hover{background:var(--g3);}
+.sig-em{font-size:16px;margin-bottom:7px;}
+.sig-n{font-size:11px;font-weight:700;margin-bottom:4px;}
+.sig-d{font-size:10px;color:var(--g8);line-height:1.55;}
+.sig-src{margin-top:7px;font-family:var(--fm);font-size:8px;color:var(--g7);border:1px solid var(--border);border-radius:3px;padding:2px 5px;display:inline-block;}
+.user-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:36px;}
+.uc{background:var(--g2);border:1px solid var(--border);border-radius:var(--r);padding:20px;transition:all .16s;}
+.uc:hover{border-color:var(--border2);background:var(--g3);}
+.uc-ico{font-size:22px;margin-bottom:9px;}
+.uc-role{font-size:14px;font-weight:700;margin-bottom:2px;}
+.uc-who{font-size:9px;color:var(--g7);font-family:var(--fm);margin-bottom:8px;letter-spacing:.5px;}
+.uc-prob{font-size:11px;color:var(--g8);line-height:1.6;margin-bottom:10px;}
+.uc-quote{font-size:10px;font-style:italic;color:var(--g9);border-left:2px solid var(--g6);padding:5px 9px;line-height:1.6;}
+.q-grid{display:grid;gap:12px;margin-top:36px;}
+.q-card{background:var(--g2);border:1px solid var(--border);border-radius:var(--r);padding:22px;}
+.q-tag{font-family:var(--fm);font-size:9px;color:var(--g7);letter-spacing:2px;text-transform:uppercase;margin-bottom:9px;}
+.q-text{font-size:13px;line-height:1.78;color:var(--g9);max-width:640px;}
+.cta-sec{background:var(--g2);border:1px solid var(--border);border-radius:12px;padding:52px 44px;text-align:center;margin:0 44px 72px;position:relative;z-index:1;}
+.cta-sec h2{font-size:clamp(20px,3vw,38px);font-weight:800;letter-spacing:-1.5px;margin-bottom:12px;}
+.cta-sec p{color:var(--g8);margin-bottom:28px;font-size:13px;}
+footer{border-top:1px solid var(--border);padding:20px 48px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;}
+footer p{color:var(--g7);font-size:11px;}
+#page-auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;z-index:1;}
+.auth-card{background:var(--g2);border:1px solid var(--border2);border-radius:12px;width:100%;max-width:500px;padding:36px;box-shadow:0 20px 80px rgba(0,0,0,.8);}
+.auth-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:5px;}
+.auth-sub{text-align:center;color:var(--g7);font-size:10px;font-family:var(--fm);letter-spacing:.8px;margin-bottom:26px;}
+.atabs{display:flex;background:var(--g3);border-radius:var(--r2);padding:3px;margin-bottom:22px;gap:3px;}
+.atab{flex:1;padding:7px;text-align:center;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;color:var(--g7);transition:all .16s;border:none;background:transparent;font-family:var(--fh);}
+.atab.active{background:var(--g5);color:#fff;}
+.fg{margin-bottom:13px;}
+.fl{font-size:9px;font-weight:700;color:var(--g7);margin-bottom:5px;display:block;letter-spacing:.8px;text-transform:uppercase;font-family:var(--fm);}
+.fi{width:100%;background:var(--g3);border:1px solid var(--border2);border-radius:var(--r2);padding:9px 12px;color:#fff;font-size:12px;transition:border-color .16s;outline:none;font-family:var(--fh);}
+.fi:focus{border-color:#fff;}
+.fi::placeholder{color:var(--g7);}
+.fs{width:100%;background:var(--g3);border:1px solid var(--border2);border-radius:var(--r2);padding:9px 12px;color:#fff;font-size:12px;outline:none;font-family:var(--fh);cursor:pointer;appearance:none;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.auth-err{background:rgba(214,53,53,.07);border:1px solid rgba(214,53,53,.2);border-radius:var(--r2);padding:8px 12px;font-size:11px;color:var(--red);margin-bottom:12px;}
+.demo-divider{text-align:center;font-size:9px;color:var(--g7);font-family:var(--fm);letter-spacing:2px;text-transform:uppercase;margin:18px 0 12px;position:relative;}
+.demo-divider::before,.demo-divider::after{content:'';position:absolute;top:50%;width:36%;height:1px;background:var(--border);}
+.demo-divider::before{left:0;}.demo-divider::after{right:0;}
+.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.dbtn{background:var(--g3);border:1px solid var(--border);border-radius:var(--r2);padding:9px;cursor:pointer;transition:all .14s;text-align:left;font-family:var(--fh);display:flex;align-items:center;gap:8px;}
+.dbtn:hover{border-color:var(--border2);background:var(--g4);}
+.dbtn-icon{font-size:14px;flex-shrink:0;}
+.dbtn-role{font-size:10px;font-weight:700;color:#fff;display:block;}
+.dbtn-name{font-size:9px;color:var(--g7);display:block;}
+.back-link{text-align:center;margin-top:14px;font-size:11px;color:var(--g7);}
+.back-link span{cursor:pointer;color:var(--g9);}
+.back-link span:hover{color:#fff;}
+.chk-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.chk-lbl{display:flex;align-items:center;gap:7px;background:var(--g3);border:1px solid var(--border);border-radius:var(--r2);padding:8px;cursor:pointer;font-size:11px;transition:all .14s;}
+.chk-lbl:hover{border-color:var(--border2);}
+.chk-lbl input{accent-color:#fff;}
+#page-app{flex-direction:column;min-height:100vh;}
+.appbar{position:fixed;top:0;left:0;right:0;z-index:400;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:rgba(8,8,8,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.ab-l{display:flex;align-items:center;gap:10px;}
+.hburg{background:none;border:none;cursor:pointer;color:var(--g7);font-size:16px;padding:4px;}
+.role-badge{font-family:var(--fm);font-size:9px;color:var(--g7);background:var(--g3);border:1px solid var(--border2);border-radius:3px;padding:2px 7px;letter-spacing:.8px;}
+.ab-company{font-size:10px;color:var(--g7);}
+.ab-r{display:flex;align-items:center;gap:9px;}
+.notif-wrap{position:relative;}
+.notif-ico{background:none;border:none;cursor:pointer;color:var(--g7);font-size:14px;padding:4px;transition:color .16s;}
+.notif-ico:hover{color:#fff;}
+.notif-dot{position:absolute;top:2px;right:2px;width:6px;height:6px;background:var(--red);border-radius:50%;border:2px solid var(--g1);animation:pulse 2s infinite;}
+.ab-user{font-size:11px;color:var(--g8);}
+.logout-btn{background:transparent;border:1px solid var(--border);color:var(--g7);font-size:10px;padding:5px 10px;border-radius:var(--r2);cursor:pointer;font-family:var(--fh);font-weight:700;transition:all .16s;}
+.logout-btn:hover{border-color:var(--red);color:var(--red);}
+.app-body{display:flex;padding-top:50px;min-height:100vh;}
+.sidebar{width:204px;position:fixed;top:50px;left:0;bottom:0;z-index:300;background:var(--g1);border-right:1px solid var(--border);padding:8px 6px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;transition:transform .2s;}
+.sb-sec{font-family:var(--fm);font-size:8px;color:var(--g6);letter-spacing:2.5px;text-transform:uppercase;padding:12px 8px 4px;}
+.nvbtn{display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:var(--r2);cursor:pointer;transition:all .1s;color:var(--g7);font-size:11px;font-weight:600;border:none;background:transparent;width:100%;text-align:left;font-family:var(--fh);}
+.nvbtn:hover{background:var(--g3);color:#fff;}
+.nvbtn.active{background:var(--g3);color:#fff;border:1px solid var(--border2);}
+.nv-ico{font-size:12px;width:15px;text-align:center;flex-shrink:0;}
+.nv-badge{margin-left:auto;background:var(--red);color:#fff;font-size:8px;font-weight:700;border-radius:100px;padding:1px 5px;}
+.main{margin-left:204px;flex:1;padding:18px;min-height:calc(100vh - 50px);}
+.main.full{margin-left:0;padding:12px;}
+.bnav{position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--g1);border-top:1px solid var(--border);display:none;padding:4px 0 14px;}
+.bnav.show{display:flex;}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--g6);font-size:9px;font-weight:700;transition:color .16s;padding:5px;border:none;background:transparent;font-family:var(--fh);}
+.bn-item.active{color:#fff;}
+.bn-ico{font-size:17px;}
+.phd{margin-bottom:16px;}
+.ptitle{font-size:18px;font-weight:800;letter-spacing:-.5px;margin-bottom:3px;}
+.psub{color:var(--g7);font-size:10px;display:flex;align-items:center;gap:5px;font-family:var(--fm);}
+.ldot{display:inline-block;width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 1.6s infinite;flex-shrink:0;}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:14px;}
+.sc{background:var(--g2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;}
+.sc-lbl{font-size:9px;color:var(--g7);font-family:var(--fm);letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px;}
+.sc-val{font-size:24px;font-weight:800;line-height:1;margin-bottom:3px;}
+.sc-chg{font-size:10px;}
+.cw{color:#fff;}.cr{color:var(--red);}.cy{color:var(--yellow);}.cg{color:var(--green);}.cm{color:var(--g7);}
+.panel{background:var(--g2);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:13px;}
+.phdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;}
+.ptname{font-size:12px;font-weight:700;}
+.ptsub{font-size:9px;color:var(--g7);margin-top:1px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:13px;}
+.badge{padding:2px 7px;border-radius:100px;font-size:9px;font-weight:700;font-family:var(--fm);}
+.bd-r{background:rgba(214,53,53,.1);color:var(--red);}
+.bd-y{background:rgba(196,154,10,.09);color:var(--yellow);}
+.bd-g{background:rgba(31,158,74,.08);color:var(--green);}
+.bd-w{background:rgba(255,255,255,.07);color:var(--g9);}
+.pill{padding:2px 8px;border-radius:100px;font-size:9px;font-weight:700;font-family:var(--fm);display:inline-block;}
+.p-ok{background:rgba(31,158,74,.07);color:var(--green);}
+.p-warn{background:rgba(196,154,10,.07);color:var(--yellow);}
+.p-danger{background:rgba(214,53,53,.07);color:var(--red);}
+.p-transit{background:rgba(255,255,255,.05);color:var(--g9);}
+.ai{display:flex;align-items:flex-start;gap:9px;padding:10px;border-radius:var(--r2);margin-bottom:6px;border:1px solid transparent;transition:all .14s;cursor:pointer;}
+.ai:hover{background:var(--g3);}
+.ai:last-child{margin-bottom:0;}
+.ai-crit{background:rgba(214,53,53,.04);border-color:rgba(214,53,53,.12);}
+.ai-warn{background:rgba(196,154,10,.03);border-color:rgba(196,154,10,.09);}
+.ai-info{background:rgba(255,255,255,.015);border-color:var(--border);}
+.ai-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.dc{background:var(--red);}.dw{background:var(--yellow);}.di{background:var(--g6);}
+.ai-body{flex:1;}
+.ai-title{font-size:11px;font-weight:700;margin-bottom:2px;}
+.ai-desc{font-size:10px;color:var(--g8);line-height:1.55;margin-bottom:4px;}
+.ai-meta{font-family:var(--fm);font-size:8px;color:var(--g7);}
+.ai-acts{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;}
+.sigmon{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:13px;}
+.sm{background:var(--g2);border:1px solid var(--border);border-radius:var(--r2);padding:10px;}
+.sm-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.sm-n{font-size:9px;color:var(--g7);font-weight:600;font-family:var(--fm);}
+.sm-st{font-size:8px;font-family:var(--fm);padding:1px 5px;border-radius:2px;font-weight:700;}
+.ss-ok{background:rgba(31,158,74,.09);color:var(--green);}
+.ss-w{background:rgba(196,154,10,.09);color:var(--yellow);}
+.ss-d{background:rgba(214,53,53,.09);color:var(--red);}
+.sm-val{font-size:14px;font-weight:700;margin-bottom:1px;}
+.sm-unit{font-size:8px;color:var(--g7);}
+.sm-bar{height:2px;background:var(--g5);border-radius:1px;margin-top:7px;overflow:hidden;}
+.sm-fill{height:100%;border-radius:1px;}
+.shcard{background:var(--g2);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-bottom:8px;transition:border-color .14s;}
+.shcard:hover{border-color:var(--border2);}
+.shcard-d{border-color:rgba(214,53,53,.17);}
+.shcard-w{border-color:rgba(196,154,10,.13);}
+.sh-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:7px;}
+.sh-id{font-family:var(--fm);font-size:9px;color:var(--g7);}
+.sh-prod{font-weight:700;font-size:12px;margin-top:2px;}
+.sh-meta{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-bottom:7px;}
+.sh-m{font-size:10px;color:var(--g7);}
+.sh-m span{color:var(--g9);font-weight:600;}
+.sh-prog{height:2px;background:var(--g5);border-radius:1px;overflow:hidden;margin-bottom:7px;}
+.sh-fill{height:100%;border-radius:1px;}
+.sh-acts{display:flex;gap:5px;flex-wrap:wrap;}
+.sh-sig{font-size:9px;color:var(--yellow);background:rgba(196,154,10,.05);border:1px solid rgba(196,154,10,.1);border-radius:3px;padding:3px 6px;display:inline-block;margin-bottom:5px;}
+.cn{background:var(--g3);border:1px solid var(--border);border-radius:var(--r2);padding:9px 12px;text-align:center;min-width:88px;}
+.cn-ok{border-color:rgba(31,158,74,.18);}.cn-w{border-color:rgba(196,154,10,.18);}.cn-d{border-color:rgba(214,53,53,.18);}
+.cn-ico{font-size:14px;margin-bottom:3px;}
+.cn-name{font-size:9px;font-weight:700;}
+.cn-st{font-size:8px;font-family:var(--fm);margin-top:2px;}
+.cn-arr{padding:0 5px;color:var(--g6);font-size:12px;flex-shrink:0;}
+.dis-score{background:var(--g2);border:1px solid rgba(214,53,53,.13);border-radius:var(--r);padding:15px;margin-bottom:14px;display:flex;align-items:center;gap:15px;flex-wrap:wrap;}
+.ds-ring{width:60px;height:60px;flex-shrink:0;position:relative;}
+.ds-ring svg{transform:rotate(-90deg);}
+.ds-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--red);}
+.ds-info{flex:1;}
+.ds-title{font-size:12px;font-weight:700;margin-bottom:3px;}
+.ds-desc{font-size:10px;color:var(--g8);line-height:1.6;}
+.dec-card{background:rgba(196,154,10,.03);border:1px solid rgba(196,154,10,.12);border-radius:var(--r);padding:13px;margin-bottom:10px;}
+.dec-hd{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.dec-title{font-weight:700;font-size:12px;}
+.dec-desc{font-size:10px;color:var(--g8);line-height:1.6;margin-bottom:9px;}
+.dec-opts{display:flex;flex-direction:column;gap:7px;}
+.dec-opt{background:var(--g3);border:1px solid var(--border2);border-radius:var(--r2);padding:9px 12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px;}
+.do-name{font-size:11px;font-weight:700;margin-bottom:2px;}
+.do-det{font-size:10px;color:var(--g8);}
+.inv-bar{height:3px;background:var(--g5);border-radius:2px;overflow:hidden;margin-top:5px;}
+.inv-fill{height:100%;border-radius:2px;}
+.cap-bar{height:7px;background:var(--g5);border-radius:4px;overflow:hidden;margin:5px 0;}
+.cap-fill{height:100%;border-radius:4px;}
+/* MAP STYLES - CRITICAL FIXES */
+.map-box{border-radius:var(--r2);overflow:hidden;border:1px solid var(--border);position:relative;background:#0a0a0a;}
+.leaflet-container{background:#111!important;font-family:var(--fh)!important;}
+.leaflet-tile-pane{filter:brightness(0.35) saturate(0.2) contrast(1.3);}
+.leaflet-control-zoom{border:1px solid var(--border2)!important;}
+.leaflet-control-zoom a{background:var(--g3)!important;color:#fff!important;border-color:var(--border2)!important;line-height:24px!important;}
+.leaflet-control-zoom a:hover{background:var(--g4)!important;}
+.leaflet-popup-content-wrapper{background:var(--g3)!important;color:#fff!important;border:1px solid var(--border2)!important;border-radius:6px!important;box-shadow:0 4px 20px rgba(0,0,0,.7)!important;}
+.leaflet-popup-tip{background:var(--g3)!important;}
+.leaflet-popup-content{font-family:var(--fh)!important;font-size:11px!important;color:#fff!important;margin:8px 12px!important;}
+.leaflet-attribution-flag{display:none!important;}
+.leaflet-control-attribution{background:rgba(0,0,0,.5)!important;color:var(--g7)!important;font-size:8px!important;}
+.dr-view{max-width:390px;margin:0 auto;}
+.dr-card{background:var(--g2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;}
+.dr-alert{background:rgba(214,53,53,.05);border:1px solid rgba(214,53,53,.18);border-radius:10px;padding:15px;margin-bottom:10px;text-align:center;}
+.rt-step{display:flex;align-items:flex-start;gap:9px;margin-bottom:10px;}
+.rt-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.rt-line{width:2px;height:20px;margin:3px 0 3px 3px;background:var(--border2);}
+.big-btn{width:100%;padding:14px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:var(--fh);transition:all .16s;margin-bottom:9px;}
+.bb-green{background:var(--green);color:#fff;}
+.bb-green:hover{opacity:.9;transform:translateY(-1px);}
+.sup-card{background:var(--g3);border:1px solid var(--border2);border-radius:var(--r2);padding:13px;margin-bottom:9px;}
+.sup-name{font-weight:700;font-size:13px;margin-bottom:3px;}
+.sup-loc{font-size:9px;color:var(--g7);}
+.sup-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:9px 0;}
+.ss-v{font-size:13px;font-weight:700;}.ss-l{font-size:8px;color:var(--g7);}
+.fin-box{background:var(--g4);border-radius:var(--r2);padding:9px;margin-bottom:9px;}
+.fin-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);}
+.fin-row:last-child{border-bottom:none;}
+.fc-row{display:flex;align-items:center;gap:9px;margin-bottom:7px;}
+.fc-lbl{font-size:10px;color:var(--g8);width:115px;flex-shrink:0;}
+.fc-track{flex:1;height:2px;background:var(--g5);border-radius:1px;overflow:hidden;}
+.fc-fill{height:100%;border-radius:1px;}
+.fc-val{font-size:10px;font-family:var(--fm);width:28px;text-align:right;color:var(--g7);}
+.srch{background:var(--g3);border:1px solid var(--border);border-radius:var(--r2);padding:8px 12px;display:flex;align-items:center;gap:7px;margin-bottom:11px;}
+.srch input{background:transparent;border:none;outline:none;color:#fff;font-size:12px;flex:1;font-family:var(--fh);}
+.srch input::placeholder{color:var(--g7);}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:11px;}
+.tab{padding:8px 14px;font-size:11px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--g7);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .16s;font-family:var(--fh);}
+.tab.active{color:#fff;border-bottom-color:#fff;}
+.tab:hover{color:var(--g9);}
+.divider{height:1px;background:var(--border);margin:11px 0;}
+.toast-wrap{position:fixed;top:60px;right:14px;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none;}
+.toast{background:var(--g3);border:1px solid var(--border2);border-radius:var(--r);padding:10px 13px;min-width:250px;max-width:320px;pointer-events:all;box-shadow:0 8px 36px rgba(0,0,0,.7);animation:tin .2s ease;display:flex;align-items:flex-start;gap:8px;}
+@keyframes tin{from{transform:translateX(52px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.t-ico{font-size:13px;flex-shrink:0;}
+.t-title{font-size:11px;font-weight:700;margin-bottom:1px;}
+.t-msg{font-size:10px;color:var(--g8);}
+.toast-crit{border-color:rgba(214,53,53,.28);}
+.toast-warn{border-color:rgba(196,154,10,.22);}
+.toast-safe{border-color:rgba(31,158,74,.2);}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.9);backdrop-filter:blur(6px);z-index:800;display:flex;align-items:center;justify-content:center;padding:18px;}
+.modal{background:var(--g2);border:1px solid var(--border2);border-radius:12px;padding:24px;max-width:460px;width:100%;animation:fup .2s ease;}
+@keyframes fup{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.modal h3{font-size:15px;font-weight:800;letter-spacing:-.3px;margin-bottom:7px;}
+.modal p{color:var(--g8);font-size:11px;line-height:1.6;margin-bottom:14px;}
+.mbts{display:flex;gap:9px;flex-wrap:wrap;}
+@keyframes sup{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.sup{animation:sup .28s ease;}
+@media(max-width:880px){
+  .lnav{padding:0 16px;}
+  .lnav-links{display:none;}
+  .lsec{padding:48px 16px;}
+  .cta-sec{margin:0 12px 48px;padding:28px 16px;}
+  footer{flex-direction:column;gap:7px;text-align:center;padding:14px;}
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.mob-on{transform:translateX(0);}
+  .main{margin-left:0!important;}
+  .g2{grid-template-columns:1fr;}
+  .frow{grid-template-columns:1fr;}
+  .hero-stats{grid-template-columns:1fr 1fr;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:480px){.demo-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="toast-wrap" id="toasts"></div>
+<div class="modal-bg hidden" id="modal-bg" onclick="closeModal(event)">
+  <div class="modal" id="modal-box"></div>
+</div>
+
+<!-- LANDING -->
+<div id="page-land" class="z1">
+  <nav class="lnav">
+    <div class="logo-wrap">
+      <svg width="30" height="30" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="8" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="88" cy="29" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="88" cy="71" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="50" cy="92" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="12" cy="71" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="12" cy="29" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><line x1="50" y1="13" x2="84" y2="31" stroke="#fff" stroke-width="1.5" opacity=".7"/><line x1="88" y1="34" x2="88" y2="66" stroke="#fff" stroke-width="1.5" opacity=".7"/><line x1="84" y1="69" x2="50" y2="87" stroke="#fff" stroke-width="1.5" opacity=".7"/><line x1="50" y1="87" x2="16" y2="69" stroke="#fff" stroke-width="1.5" opacity=".7"/><line x1="12" y1="66" x2="12" y2="34" stroke="#fff" stroke-width="1.5" opacity=".7"/><line x1="16" y1="31" x2="50" y2="13" stroke="#fff" stroke-width="1.5" opacity=".7"/><path d="M50 35 L63 42.5 L63 57.5 L50 65 L37 57.5 L37 42.5 Z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><polyline points="50,35 50,50" stroke="#fff" stroke-width="1.5" opacity=".6"/><polyline points="37,42.5 50,50 63,42.5" stroke="#fff" stroke-width="1.5" opacity=".6"/><polyline points="50,50 63,57.5" stroke="#fff" stroke-width="1.5" opacity=".6"/></svg>
+      <div class="logo-text">Cargo<span>Mind</span></div>
+    </div>
+    <div class="lnav-links"><a href="#signals">Signals</a><a href="#solutions">Solutions</a><a href="#why">Why CargoMind</a></div>
+    <div style="display:flex;gap:9px;">
+      <button class="btn btn-g" onclick="goAuth('login')">Sign In</button>
+      <button class="btn btn-p" onclick="goAuth('register')">Get Started</button>
+    </div>
+  </nav>
+  <div class="hero">
+    <div class="hero-badge"><span class="live-pulse"></span>LIVE AI SUPPLY CHAIN INTELLIGENCE</div>
+    <h1>Stop Managing<br>Supply Chain<br>Autopsies</h1>
+    <p>Most logistics software tells you why your shipment died — three days after it happened. CargoMind detects disruptions <strong>before they cascade</strong> into billion-dollar losses.</p>
+    <div class="hero-cta">
+      <button class="btn btn-p btn-lg" onclick="goAuth('register')">Start Free Trial &#8594;</button>
+      <button class="btn btn-g btn-lg" onclick="startDemo()">Try Live Demo</button>
+    </div>
+    <div class="hero-stats">
+      <div class="hs-item"><div class="hs-val">$180B</div><div class="hs-lbl">Annual Disruption Cost</div></div>
+      <div class="hs-item"><div class="hs-val">15%</div><div class="hs-lbl">Revenue Lost to Delays</div></div>
+      <div class="hs-item"><div class="hs-val">15</div><div class="hs-lbl">Live Signal Sources</div></div>
+      <div class="hs-item"><div class="hs-val">5 Days</div><div class="hs-lbl">Early Warning Window</div></div>
+    </div>
+  </div>
+  <div class="lsec" id="why">
+    <div class="sec-tag">The Problem</div>
+    <div class="sec-h">We're flying blind in a storm.</div>
+    <div class="q-grid">
+      <div class="q-card"><div class="q-tag">The Autopsy Problem</div><div class="q-text">"Most logistics software today is a digital autopsy. It tells you exactly why your shipment 'died' three days after it happened. By the time the dashboard turns red, the factory is already silent, and the money is already gone."</div></div>
+      <div class="q-card"><div class="q-tag">The Bullwhip Effect</div><div class="q-text">"A supply chain isn't a line — it's a nervous system. A minor 6-hour delay at a single berth in Singapore creates cascading bottlenecks that trigger truck shortages in Europe and inventory stock-outs in America."</div></div>
+      <div class="q-card"><div class="q-tag">Critical Cargo Stakes</div><div class="q-text">"If a shipment of semiconductors is late, a car company loses money. But if a shipment of insulin is caught in a hidden bottleneck, people die. In Time-Critical logistics, there is no such thing as Better Late Than Never."</div></div>
+      <div class="q-card"><div class="q-tag">Volatility Is The New Normal</div><div class="q-text">"We used to have Black Swan events once a decade. Now, between climate change, Suez Canal blockages, and global port strikes, the Black Swan happens every Tuesday. A static supply chain is a fragile supply chain."</div></div>
+    </div>
+  </div>
+  <div class="lsec" id="signals">
+    <div class="sec-tag">Intelligence Engine</div>
+    <div class="sec-h">15 Live Signals. Zero Blind Spots.</div>
+    <div class="sec-sub">CargoMind monitors every critical choke point across the global supply chain — from port berth congestion to river depth levels.</div>
+    <div class="sig-grid">
+      <div class="sig-card"><div class="sig-em">&#9875;</div><div class="sig-n">Vessel Anchorage Count</div><div class="sig-d">Spike in ships waiting predicts berth congestion before your vessel arrives.</div><span class="sig-src">MarineTraffic</span></div>
+      <div class="sig-card"><div class="sig-em">&#9200;&#65039;</div><div class="sig-n">Vessel Dwell Time</div><div class="sig-d">Increasing dwell signals labor shortages or crane failures at terminal.</div><span class="sig-src">SeaVantage</span></div>
+      <div class="sig-card"><div class="sig-em">&#128682;</div><div class="sig-n">Container Gate-Out Speed</div><div class="sig-d">Longer gate-out times mean the yard is full — your shipment will be buried.</div><span class="sig-src">JNPT Dashboard</span></div>
+      <div class="sig-card"><div class="sig-em">&#128665;</div><div class="sig-n">Traffic Congestion Index</div><div class="sig-d">Real-time speed deviations on key freight corridors like NH48.</div><span class="sig-src">TomTom Traffic</span></div>
+      <div class="sig-card"><div class="sig-em">&#128195;</div><div class="sig-n">Border Wait Times</div><div class="sig-d">Spikes indicate customs audits or staffing issues at checkpoints.</div><span class="sig-src">CBP Border Data</span></div>
+      <div class="sig-card"><div class="sig-em">&#9981;</div><div class="sig-n">Diesel Price Volatility</div><div class="sig-d">Sharp spikes lead to carrier ghosting — truckers reject pre-booked loads.</div><span class="sig-src">EIA.gov</span></div>
+      <div class="sig-card"><div class="sig-em">&#127754;</div><div class="sig-n">Sea State — Wave Height</div><div class="sig-d">High waves force slow-steaming, adding 2–5 days to voyages.</div><span class="sig-src">NOAA Ocean</span></div>
+      <div class="sig-card"><div class="sig-em">&#128167;</div><div class="sig-n">River Depth Levels</div><div class="sig-d">Low water in Rhine or Mississippi forces barges to carry less weight.</div><span class="sig-src">USGS WaterWatch</span></div>
+      <div class="sig-card"><div class="sig-em">&#127744;</div><div class="sig-n">Tropical Cyclone Tracks</div><div class="sig-d">Ports stop accepting exports 5 days before a storm for safety.</div><span class="sig-src">NHC / NOAA</span></div>
+      <div class="sig-card"><div class="sig-em">&#128202;</div><div class="sig-n">PMI Delivery Times</div><div class="sig-d">A falling PMI sub-index means suppliers globally are struggling.</div><span class="sig-src">Trading Economics</span></div>
+      <div class="sig-card"><div class="sig-em">&#9994;</div><div class="sig-n">Labor Strike Notices</div><div class="sig-d">Unions file intent-to-strike weeks before — 100% certain delay signal.</div><span class="sig-src">Google News API</span></div>
+      <div class="sig-card"><div class="sig-em">&#9992;&#65039;</div><div class="sig-n">Air Freight Spot Rates</div><div class="sig-d">Rising air rates signal panic buying, often preceding ocean backlogs.</div><span class="sig-src">TAC Index</span></div>
+      <div class="sig-card"><div class="sig-em">&#128225;</div><div class="sig-n">AIS Dark Gaps</div><div class="sig-d">Vessel stops transmitting GPS — indicates port bypass or route omission.</div><span class="sig-src">VesselFinder</span></div>
+      <div class="sig-card"><div class="sig-em">&#128230;</div><div class="sig-n">Empty Container Availability</div><div class="sig-d">Zero empty containers means your ready shipment won't move.</div><span class="sig-src">Container xChange</span></div>
+      <div class="sig-card"><div class="sig-em">&#128187;</div><div class="sig-n">Customs System Alerts</div><div class="sig-d">Technical outages at customs portals create instant backlogs.</div><span class="sig-src">CSMS Portal</span></div>
+    </div>
+  </div>
+  <div class="lsec" id="solutions">
+    <div class="sec-tag">Built For Every Role</div>
+    <div class="sec-h">One platform. Every link in the chain.</div>
+    <div class="user-grid">
+      <div class="uc"><div class="uc-ico">&#9935;&#65039;</div><div class="uc-role">Suppliers</div><div class="uc-who">RAW MATERIAL PROVIDERS</div><div class="uc-prob">No demand visibility, inconsistent orders, no delivery confirmation loop.</div><div class="uc-quote">"I need to know future demand so I can plan my supply properly."</div></div>
+      <div class="uc"><div class="uc-ico">&#127981;</div><div class="uc-role">Manufacturers</div><div class="uc-who">FACTORIES PRODUCING GOODS</div><div class="uc-prob">Raw material delays halt production without warning, costing millions per idle hour.</div><div class="uc-quote">"I need to know when materials arrive and get alerts before production stops."</div></div>
+      <div class="uc"><div class="uc-ico">&#128665;</div><div class="uc-role">Logistics Companies</div><div class="uc-who">TRANSPORT & FLEET OPERATORS</div><div class="uc-prob">Delays, poor routing, no real-time visibility across hundreds of trucks and vessels.</div><div class="uc-quote">"I need live tracking, best routes, and delay alerts so I can deliver on time."</div></div>
+      <div class="uc"><div class="uc-ico">&#129333;</div><div class="uc-role">Truck Drivers</div><div class="uc-who">FIELD TRANSPORT OPERATORS</div><div class="uc-prob">Language barriers, no real-time route updates, no voice alerts in local language.</div><div class="uc-quote">"I just need to know where to go — in my language."</div></div>
+      <div class="uc"><div class="uc-ico">&#127978;</div><div class="uc-role">Warehouse Managers</div><div class="uc-who">STORAGE & DISTRIBUTION</div><div class="uc-prob">Inventory errors cause costly mismatches between what's booked and what arrives.</div><div class="uc-quote">"I need accurate real-time inventory and easy management tools."</div></div>
+      <div class="uc"><div class="uc-ico">&#127978;</div><div class="uc-role">Retailers / E-commerce</div><div class="uc-who">SHOPS, SUPERMARKETS, BRANDS</div><div class="uc-prob">Stockouts during peak seasons destroy revenue and customer relationships.</div><div class="uc-quote">"I need to know what to stock and when — before shelves go empty."</div></div>
+      <div class="uc"><div class="uc-ico">&#128202;</div><div class="uc-role">Supply Chain Managers</div><div class="uc-who">ENTERPRISE DECISION MAKERS</div><div class="uc-prob">No real-time data forces reactive decisions after damage is already done.</div><div class="uc-quote">"I need one dashboard showing everything in real time to decide fast."</div></div>
+      <div class="uc"><div class="uc-ico">&#127973;</div><div class="uc-role">Healthcare & Pharma</div><div class="uc-who">HOSPITALS, PHARMA COMPANIES</div><div class="uc-prob">Critical shortages and delays don't just cost money — they cost human lives.</div><div class="uc-quote">"I need instant updates and zero delays because lives depend on it."</div></div>
+    </div>
+  </div>
+  <div class="cta-sec">
+    <h2>Stop Flying Blind.<br>Start Seeing Ahead.</h2>
+    <p>Join supply chain teams predicting disruptions 3–5 days before they happen.</p>
+    <div style="display:flex;gap:11px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-p btn-lg" onclick="goAuth('register')">Get Started Free &#8594;</button>
+      <button class="btn btn-g btn-lg" onclick="startDemo()">Try Live Demo &#8594;</button>
+    </div>
+  </div>
+  <footer>
+    <div class="logo-wrap">
+      <svg width="22" height="22" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="8" r="5" fill="none" stroke="#555" stroke-width="2.5"/><circle cx="88" cy="29" r="5" fill="none" stroke="#555" stroke-width="2.5"/><circle cx="88" cy="71" r="5" fill="none" stroke="#555" stroke-width="2.5"/><circle cx="50" cy="92" r="5" fill="none" stroke="#555" stroke-width="2.5"/><circle cx="12" cy="71" r="5" fill="none" stroke="#555" stroke-width="2.5"/><circle cx="12" cy="29" r="5" fill="none" stroke="#555" stroke-width="2.5"/><path d="M50 35 L63 42.5 L63 57.5 L50 65 L37 57.5 L37 42.5 Z" fill="none" stroke="#555" stroke-width="2"/></svg>
+      <div class="logo-text" style="font-size:14px;color:var(--g7);">Cargo<span>Mind</span></div>
+    </div>
+    <p>&#169; 2026 CargoMind AI — Predicting disruptions before they cascade.</p>
+    <p style="color:var(--g6);font-size:10px;">Built for Hack2Skill · Google AI Hackathon</p>
+  </footer>
+</div>
+
+<!-- AUTH -->
+<div id="page-auth" class="z1" style="display:none;">
+  <div class="auth-card sup">
+    <div class="auth-logo">
+      <svg width="28" height="28" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="8" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="88" cy="29" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="88" cy="71" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="50" cy="92" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="12" cy="71" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="12" cy="29" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><path d="M50 35 L63 42.5 L63 57.5 L50 65 L37 57.5 L37 42.5 Z" fill="none" stroke="#fff" stroke-width="2"/></svg>
+      <div class="logo-text" style="font-size:19px;">Cargo<span>Mind</span></div>
+    </div>
+    <div class="auth-sub">AI SUPPLY CHAIN INTELLIGENCE PLATFORM</div>
+    <div class="atabs">
+      <button class="atab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+      <button class="atab" id="tab-register" onclick="switchTab('register')">Register</button>
+    </div>
+    <div id="auth-err" class="auth-err hidden"></div>
+    <div id="form-login">
+      <div class="fg"><label class="fl">Email Address</label><input class="fi" type="email" id="l-email" placeholder="you@company.com"/></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleLogin()"/></div>
+      <button class="btn btn-p btn-full" onclick="handleLogin()">Sign In &#8594;</button>
+      <div class="demo-divider">or try a demo role instantly</div>
+      <div class="demo-grid">
+        <button class="dbtn" onclick="demoLogin('scm')"><span class="dbtn-icon">&#128202;</span><div><span class="dbtn-role">Supply Chain Mgr</span><span class="dbtn-name">Priya Sharma · Samsung</span></div></button>
+        <button class="dbtn" onclick="demoLogin('manufacturer')"><span class="dbtn-icon">&#127981;</span><div><span class="dbtn-role">Manufacturer</span><span class="dbtn-name">Arjun Mehta · Tata Motors</span></div></button>
+        <button class="dbtn" onclick="demoLogin('logistics')"><span class="dbtn-icon">&#128665;</span><div><span class="dbtn-role">Fleet Manager</span><span class="dbtn-name">Suresh Singh · Mahindra</span></div></button>
+        <button class="dbtn" onclick="demoLogin('driver')"><span class="dbtn-icon">&#129333;</span><div><span class="dbtn-role">Truck Driver</span><span class="dbtn-name">Rajesh Kumar</span></div></button>
+        <button class="dbtn" onclick="demoLogin('supplier')"><span class="dbtn-icon">&#9935;&#65039;</span><div><span class="dbtn-role">Supplier</span><span class="dbtn-name">Rahul Gupta · Tata Chem</span></div></button>
+        <button class="dbtn" onclick="demoLogin('retailer')"><span class="dbtn-icon">&#127978;</span><div><span class="dbtn-role">Retailer</span><span class="dbtn-name">Vikram Patel · Flipkart</span></div></button>
+        <button class="dbtn" onclick="demoLogin('warehouse')"><span class="dbtn-icon">&#127978;</span><div><span class="dbtn-role">Warehouse Manager</span><span class="dbtn-name">Anita Rao · Flipkart WH</span></div></button>
+        <button class="dbtn" onclick="demoLogin('healthcare')"><span class="dbtn-icon">&#127973;</span><div><span class="dbtn-role">Healthcare / Pharma</span><span class="dbtn-name">Dr. Kavya · Apollo</span></div></button>
+      </div>
+    </div>
+    <div id="form-register" class="hidden">
+      <div class="frow">
+        <div class="fg"><label class="fl">Full Name</label><input class="fi" type="text" id="r-name" placeholder="Priya Sharma"/></div>
+        <div class="fg"><label class="fl">Company</label><input class="fi" type="text" id="r-company" placeholder="Samsung India"/></div>
+      </div>
+      <div class="fg"><label class="fl">Email Address</label><input class="fi" type="email" id="r-email" placeholder="priya@samsung.com"/></div>
+      <div class="fg"><label class="fl">Your Role</label>
+        <select class="fs" id="r-role" onchange="roleChanged()">
+          <option value="">Select your role...</option>
+          <option value="scm">&#128202; Supply Chain Manager</option>
+          <option value="manufacturer">&#127981; Manufacturer</option>
+          <option value="logistics">&#128665; Logistics Company</option>
+          <option value="driver">&#129333; Truck Driver</option>
+          <option value="supplier">&#9935;&#65039; Supplier</option>
+          <option value="retailer">&#127978; Retailer / E-commerce</option>
+          <option value="warehouse">&#127978; Warehouse Manager</option>
+          <option value="healthcare">&#127973; Healthcare / Pharma</option>
+        </select>
+      </div>
+      <div id="reg-driver" class="hidden">
+        <div class="fg"><label class="fl">Voice Alert Language</label>
+          <select class="fs" id="r-lang">
+            <option value="hindi">हिन्दी (Hindi)</option>
+            <option value="english">English</option>
+            <option value="gujarati">ગુજરાતી (Gujarati)</option>
+            <option value="marathi">मराठी (Marathi)</option>
+            <option value="telugu">తెలుగు (Telugu)</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="r-pass" placeholder="Min. 8 characters"/></div>
+      <button class="btn btn-p btn-full" onclick="handleRegister()">Create Account &#8594;</button>
+    </div>
+    <div class="back-link"><span onclick="goLanding()">&#8592; Back to home</span></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="page-app" style="display:none;">
+  <div class="appbar">
+    <div class="ab-l">
+      <button class="hburg" onclick="toggleSb()">&#9776;</button>
+      <div class="logo-wrap" style="gap:7px;">
+        <svg width="22" height="22" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="8" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="88" cy="29" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="50" cy="92" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="12" cy="29" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><path d="M50 35 L63 42.5 L63 57.5 L50 65 L37 57.5 L37 42.5 Z" fill="none" stroke="#fff" stroke-width="2"/></svg>
+        <div class="logo-text" style="font-size:14px;">Cargo<span>Mind</span></div>
+      </div>
+      <span class="role-badge" id="ab-role">SCM</span>
+      <span class="ab-company" id="ab-co"></span>
+    </div>
+    <div class="ab-r">
+      <div class="notif-wrap">
+        <button class="notif-ico" onclick="showNotifs()">&#128276;</button>
+        <div class="notif-dot"></div>
+      </div>
+      <span class="ab-user" id="ab-user"></span>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+  <div class="app-body">
+    <div class="sidebar" id="sidebar">
+      <div class="sb-sec">Overview</div>
+      <button class="nvbtn active" onclick="go('overview',this)"><span class="nv-ico">&#128202;</span>Dashboard</button>
+      <button class="nvbtn" onclick="go('alerts',this)"><span class="nv-ico">&#9888;&#65039;</span>Live Alerts<span class="nv-badge" id="ab-cnt">3</span></button>
+      <button class="nvbtn" onclick="go('signals',this)"><span class="nv-ico">&#128225;</span>Signal Monitor</button>
+      <div class="sb-sec">Operations</div>
+      <button class="nvbtn" onclick="go('shipments',this)"><span class="nv-ico">&#128230;</span>Shipments</button>
+      <button class="nvbtn" onclick="go('fleet',this)"><span class="nv-ico">&#128665;</span>Fleet & Routes</button>
+      <button class="nvbtn" onclick="go('inventory',this)"><span class="nv-ico">&#127978;</span>Inventory</button>
+      <div class="sb-sec">Intelligence</div>
+      <button class="nvbtn" onclick="go('cascade',this)"><span class="nv-ico">&#128279;</span>Cascade Map</button>
+      <button class="nvbtn" onclick="go('forecast',this)"><span class="nv-ico">&#128302;</span>AI Forecast</button>
+      <button class="nvbtn" onclick="go('marketplace',this)"><span class="nv-ico">&#128269;</span>Marketplace</button>
+      <div class="sb-sec">Account</div>
+      <button class="nvbtn" onclick="go('settings',this)"><span class="nv-ico">&#9881;&#65039;</span>Settings</button>
+    </div>
+    <div class="main" id="main"></div>
+  </div>
+  <div class="bnav" id="bnav">
+    <button class="bn-item active" onclick="drvNav('home',this)"><span class="bn-ico">&#127968;</span>Home</button>
+    <button class="bn-item" onclick="drvNav('route',this)"><span class="bn-ico">&#128506;&#65039;</span>Route</button>
+    <button class="bn-item" onclick="drvNav('alerts',this)"><span class="bn-ico">&#128276;</span>Alerts</button>
+    <button class="bn-item" onclick="drvNav('profile',this)"><span class="bn-ico">&#128100;</span>Profile</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ─── STATE ───
+var curUser=null, curRole='scm', curData={};
+var mapInstances={};
+
+// ─── PAGE ROUTING ───
+function showPage(id){
+  ['page-land','page-auth','page-app'].forEach(function(p){
+    var el=document.getElementById(p);
+    if(el) el.style.display='none';
+  });
+  var t=document.getElementById(id);
+  if(!t) return;
+  if(id==='page-land') t.style.display='block';
+  else if(id==='page-auth'){ t.style.display='flex'; }
+  else if(id==='page-app'){ t.style.display='flex'; t.style.flexDirection='column'; }
+  window.scrollTo(0,0);
+}
+function goLanding(){ showPage('page-land'); }
+function goAuth(tab){ showPage('page-auth'); switchTab(tab||'login'); }
+function startDemo(){ goAuth('login'); }
+
+// ─── AUTH UI ───
+function switchTab(t){
+  document.getElementById('form-login').classList.toggle('hidden',t!=='login');
+  document.getElementById('form-register').classList.toggle('hidden',t!=='register');
+  document.getElementById('tab-login').classList.toggle('active',t==='login');
+  document.getElementById('tab-register').classList.toggle('active',t==='register');
+  document.getElementById('auth-err').classList.add('hidden');
+}
+function showErr(m){ var e=document.getElementById('auth-err'); e.textContent=m; e.classList.remove('hidden'); }
+function roleChanged(){
+  var r=document.getElementById('r-role').value;
+  document.getElementById('reg-driver').classList.toggle('hidden',r!=='driver');
+}
+function handleLogin(){
+  var email=document.getElementById('l-email').value.trim();
+  var pass=document.getElementById('l-pass').value;
+  if(!email||!pass){showErr('Please fill all fields');return;}
+  showErr('Firebase not configured — use demo buttons below.');
+}
+function handleRegister(){
+  var name=document.getElementById('r-name').value.trim();
+  var co=document.getElementById('r-company').value.trim();
+  var email=document.getElementById('r-email').value.trim();
+  var role=document.getElementById('r-role').value;
+  var pass=document.getElementById('r-pass').value;
+  if(!name||!co||!email||!role||!pass){showErr('Please fill all fields');return;}
+  if(pass.length<8){showErr('Password must be at least 8 characters');return;}
+  curData={name:name,company:co,role:role,email:email};
+  curRole=role;
+  launch();
+}
+function doLogout(){
+  curData={}; curRole='scm';
+  destroyAllMaps();
+  showPage('page-land');
+}
+function demoLogin(role){
+  var demos={
+    scm:{name:'Priya Sharma',company:'Samsung India',role:'scm'},
+    manufacturer:{name:'Arjun Mehta',company:'Tata Motors',role:'manufacturer'},
+    logistics:{name:'Suresh Singh',company:'Mahindra Logistics',role:'logistics'},
+    driver:{name:'Rajesh Kumar',company:'Mahindra Logistics',role:'driver',lang:'hindi'},
+    supplier:{name:'Rahul Gupta',company:'Tata Chemicals',role:'supplier'},
+    retailer:{name:'Vikram Patel',company:'Flipkart',role:'retailer'},
+    warehouse:{name:'Anita Rao',company:'Flipkart Warehouse Mumbai',role:'warehouse'},
+    healthcare:{name:'Dr. Kavya Nair',company:'Apollo Pharmacy',role:'healthcare'}
+  };
+  curData=demos[role]||demos.scm;
+  curRole=role;
+  launch();
+  if(role==='scm'||role==='manufacturer') setTimeout(runDemo,2000);
+}
+
+// ─── LAUNCH ───
+function launch(){
+  showPage('page-app');
+  var labels={scm:'SCM',manufacturer:'MFG',logistics:'FLEET',driver:'DRIVER',supplier:'SUPPLIER',retailer:'RETAIL',warehouse:'WAREHOUSE',healthcare:'PHARMA'};
+  document.getElementById('ab-role').textContent=labels[curRole]||curRole.toUpperCase();
+  document.getElementById('ab-user').textContent=curData.name||'User';
+  document.getElementById('ab-co').textContent=curData.company||'';
+  var sb=document.getElementById('sidebar');
+  var bn=document.getElementById('bnav');
+  var mn=document.getElementById('main');
+  if(curRole==='driver'){
+    sb.style.display='none'; bn.classList.add('show');
+    mn.classList.add('full'); mn.style.paddingBottom='80px';
+    renderDriverHome();
+  } else {
+    sb.style.display='flex'; bn.classList.remove('show');
+    mn.classList.remove('full'); mn.style.paddingBottom='';
+    renderOverview();
+  }
+  setTimeout(function(){toast('Welcome, '+(curData.name||'User').split(' ')[0],'CargoMind monitoring 15 live signals','📊','');},600);
+  setTimeout(function(){toast('Critical Alert','NH48 BLOCKED — Gujarat flooding detected','🔴','crit');},2200);
+  if(curRole==='scm'||curRole==='manufacturer'){
+    setTimeout(function(){toast('Decision Required','Truck MH04 AB 1234 blocked — approval needed','⚠️','warn');},4000);
+  }
+}
+function toggleSb(){ document.getElementById('sidebar').classList.toggle('mob-on'); }
+
+// ─── NAVIGATION ───
+function go(view,btn){
+  document.querySelectorAll('.nvbtn').forEach(function(b){b.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+  var mn=document.getElementById('main');
+  mn.style.opacity='0';
+  setTimeout(function(){
+    destroyAllMaps();
+    var views={overview:renderOverview,alerts:renderAlerts,signals:renderSignals,shipments:renderShipments,fleet:renderFleet,inventory:renderInventory,cascade:renderCascade,forecast:renderForecast,marketplace:renderMarketplace,settings:renderSettings};
+    if(views[view]) views[view]();
+    mn.style.transition='opacity .25s';
+    mn.style.opacity='1';
+  },120);
+}
+
+// ─── MAP ENGINE (FIXED) ───
+function destroyAllMaps(){
+  Object.keys(mapInstances).forEach(function(id){
+    try{ mapInstances[id].remove(); }catch(e){}
+  });
+  mapInstances={};
+}
+
+function buildMap(containerId, lat, lng, zoom, markers, routes){
+  // Must wait for DOM element to exist
+  var el=document.getElementById(containerId);
+  if(!el){ console.warn('Map container not found:',containerId); return; }
+  // Destroy existing instance if any
+  if(mapInstances[containerId]){
+    try{ mapInstances[containerId].remove(); }catch(e){}
+    delete mapInstances[containerId];
+  }
+  // Force container dimensions
+  el.style.minHeight='260px';
+  try{
+    var map=L.map(containerId,{
+      center:[lat,lng],
+      zoom:zoom,
+      zoomControl:true,
+      scrollWheelZoom:false,
+      attributionControl:true
+    });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      maxZoom:18,
+      attribution:'© OpenStreetMap'
+    }).addTo(map);
+    if(markers){
+      markers.forEach(function(m){
+        var sz=m.big?16:10;
+        var icon=L.divIcon({
+          className:'',
+          html:'<div style="width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:'+m.col+';border:2px solid rgba(255,255,255,0.5);box-shadow:0 0 12px '+m.col+'88;"></div>',
+          iconSize:[sz,sz],
+          iconAnchor:[sz/2,sz/2]
+        });
+        L.marker([m.lat,m.lng],{icon:icon}).addTo(map).bindPopup('<strong>'+m.label+'</strong>');
+      });
+    }
+    if(routes){
+      routes.forEach(function(r){
+        L.polyline(r.pts,{color:r.col||'rgba(255,255,255,0.4)',weight:2.5,opacity:0.6}).addTo(map);
+      });
+    }
+    // Force map to recalculate size after render
+    setTimeout(function(){ try{ map.invalidateSize(); }catch(e){} },200);
+    mapInstances[containerId]=map;
+    return map;
+  }catch(e){
+    console.error('Map init error:',e);
+    el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--g7);font-size:12px;">Map unavailable</div>';
+  }
+}
+
+// ─── DATA ───
+var SIG_DATA=[
+  {name:'Vessel Anchorage',val:'23 ships',unit:'JNPT Mumbai',st:'danger',pct:90,src:'MarineTraffic'},
+  {name:'Dwell Time',val:'18.4h',unit:'At Berth Avg',st:'danger',pct:85,src:'SeaVantage'},
+  {name:'Gate-Out Speed',val:'SLOW',unit:'Container Pickup',st:'warn',pct:65,src:'JNPT'},
+  {name:'Road Traffic',val:'BLOCKED',unit:'NH48 Gujarat',st:'danger',pct:100,src:'TomTom'},
+  {name:'Border Wait',val:'4.2h',unit:'Avg Wait',st:'warn',pct:55,src:'CBP.gov'},
+  {name:'Diesel Price',val:'₹94.2',unit:'Per Litre',st:'warn',pct:60,src:'EIA.gov'},
+  {name:'Wave Height',val:'2.1m',unit:'Arabian Sea',st:'ok',pct:25,src:'NOAA'},
+  {name:'River Depth',val:'78cm',unit:'Rhine Kaub',st:'warn',pct:45,src:'USGS'},
+  {name:'Cyclone Track',val:'CLEAR',unit:'Bay of Bengal',st:'ok',pct:5,src:'NHC'},
+  {name:'PMI Delivery',val:'47.2',unit:'Sub-Index',st:'warn',pct:50,src:'Trading Eco'},
+  {name:'Strike Alerts',val:'1 FILED',unit:'Chennai Port',st:'danger',pct:75,src:'News API'},
+  {name:'Air Freight',val:'+34%',unit:'Rate Spike',st:'warn',pct:65,src:'TAC Index'},
+  {name:'AIS Dark Gap',val:'1 ACTIVE',unit:'Str. Malacca',st:'warn',pct:40,src:'VesselFinder'},
+  {name:'Empty Containers',val:'LOW',unit:'NW India',st:'warn',pct:55,src:'xChange'},
+  {name:'Customs Systems',val:'ONLINE',unit:'ACE/ICEGATE',st:'ok',pct:5,src:'CSMS'},
+];
+var ALERT_DATA=[
+  {type:'crit',ico:'⚓',title:'JNPT Port — Severe Berth Congestion',desc:'23 vessels at anchorage. Avg dwell 18.4hrs vs 6hr normal. Maersk Seletar shipment impacted. Reroute to Mundra recommended.',sig:'VESSEL_ANCHORAGE',ago:'2 min ago',sev:'9/10'},
+  {type:'crit',ico:'🚛',title:'NH48 Road Block — Gujarat Flooding',desc:'Major flooding at km 432 near Vadodara. Truck MH04 AB 1234 (Rajesh Kumar) fully blocked. Reroute via NH27 adds only 2.5 hrs.',sig:'TRAFFIC_CONGESTION',ago:'14 min ago',sev:'8/10'},
+  {type:'crit',ico:'✊',title:'Dockworkers Strike Intent — Chennai Port',desc:'Union filed 14-day notice. Strike date: Nov 28. 3 shipments through Chennai at risk.',sig:'LABOR_STRIKE',ago:'2 hrs ago',sev:'9/10'},
+  {type:'warn',ico:'✈️',title:'Air Freight Spot Rates +34%',desc:'TAC Index: rate spike ₹2.10→₹2.81/kg. Pattern matches pre-ocean-backlog surge.',sig:'AIR_FREIGHT',ago:'1 hr ago',sev:'6/10'},
+  {type:'warn',ico:'💧',title:'Rhine River Below Navigation Threshold',desc:'Level at Kaub: 78cm (min 100cm). Barge operators reducing load 30%.',sig:'RIVER_DEPTH',ago:'3 hrs ago',sev:'5/10'},
+  {type:'warn',ico:'📡',title:'AIS Dark Gap — Vessel "Pacific Horizon"',desc:'No AIS for 4.2 hrs in Strait of Malacca. Possible port skipping.',sig:'AIS_DARK_GAP',ago:'5 hrs ago',sev:'6/10'},
+  {type:'info',ico:'⛽',title:'Diesel Price Spike — Maharashtra',desc:'₹94.20/L (+₹4.20 this week). Monitor for carrier ghosting on pre-booked loads.',sig:'DIESEL_PRICE',ago:'6 hrs ago',sev:'3/10'},
+  {type:'info',ico:'📊',title:'PMI Delivery Times Falling',desc:'October PMI sub-index at 47.2. Global supplier delays building.',sig:'PMI_DELIVERY',ago:'12 hrs ago',sev:'4/10'},
+];
+var SHIP_DATA=[
+  {id:'CM-001',prod:'Samsung Galaxy S25 — 50,000 units',from:'Samsung Noida',to:'Flipkart Mumbai',mode:'🚛',carrier:'Mahindra Logistics',eta:'Nov 17',st:'DELAYED',type:'danger',pct:65,sig:'NH48 blocked — rerouting via NH27'},
+  {id:'CM-002',prod:'Lithium Cells — 10,000 kg',from:'Tata Chemicals Ahmedabad',to:'Samsung Noida',mode:'🚛',carrier:'VRL Logistics',eta:'Nov 18',st:'CRITICAL',type:'danger',pct:40,sig:'NH48 blocked + 3 day delay'},
+  {id:'CM-003',prod:'iPhone 16 Pro — 20,000 units',from:'Shanghai Port',to:'JNPT Mumbai',mode:'🚢',carrier:'Maersk Seletar',eta:'Nov 16',st:'AT RISK',type:'warn',pct:75,sig:'Port congestion — +18hr wait'},
+  {id:'CM-004',prod:'Nike Air Max — 5,000 pairs',from:'Vietnam Factory',to:'Delhi Warehouse',mode:'✈️',carrier:'DHL Air',eta:'Nov 14',st:'ON TIME',type:'ok',pct:90,sig:''},
+  {id:'CM-005',prod:'Insulin Vials — CRITICAL CARGO',from:'Mumbai Pharma',to:'Apollo Delhi',mode:'✈️',carrier:'Blue Dart',eta:'Nov 13',st:'ON TIME',type:'ok',pct:95,sig:''},
+  {id:'CM-006',prod:'Auto Parts — Tata Motors',from:'Chennai Plant',to:'Pune Factory',mode:'🚛',carrier:'VRL Logistics',eta:'Nov 15',st:'IN TRANSIT',type:'transit',pct:60,sig:''},
+  {id:'CM-007',prod:'Steel Coils — 500 MT',from:'Jharkhand',to:'Surat Factory',mode:'🚂',carrier:'CONCOR Rail',eta:'Nov 20',st:'ON TIME',type:'ok',pct:30,sig:''},
+  {id:'CM-008',prod:'Electronic Components',from:'Taiwan',to:'Chennai Port',mode:'🚢',carrier:'MSC Splendida',eta:'Nov 22',st:'AT RISK',type:'warn',pct:55,sig:'AIS dark gap detected'},
+];
+
+// ─── HTML HELPERS ───
+function sigHTML(s){
+  var c=s.st==='danger'?'var(--red)':s.st==='warn'?'var(--yellow)':'var(--green)';
+  return '<div class="sm"><div class="sm-hd"><div class="sm-n">'+s.name+'</div><div class="sm-st '+(s.st==='danger'?'ss-d':s.st==='warn'?'ss-w':'ss-ok')+'">'+s.st.toUpperCase()+'</div></div><div class="sm-val" style="color:'+c+'">'+s.val+'</div><div class="sm-unit">'+s.unit+'</div><div class="sm-bar"><div class="sm-fill" style="width:'+s.pct+'%;background:'+c+'"></div></div>'+(s.src?'<div style="font-family:var(--fm);font-size:8px;color:var(--g6);margin-top:4px;">SRC: '+s.src+'</div>':'')+'</div>';
+}
+function alertHTML(a,full){
+  var tc=a.type==='crit'?'bd-r':a.type==='warn'?'bd-y':'bd-w';
+  var dc=a.type==='crit'?'dc':a.type==='warn'?'dw':'di';
+  var cls=a.type==='crit'?'ai-crit':a.type==='warn'?'ai-warn':'ai-info';
+  return '<div class="ai '+cls+'"><div class="ai-dot '+dc+'"></div><div class="ai-body"><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;"><span style="font-size:13px;">'+a.ico+'</span><div class="ai-title">'+a.title+'</div><span class="badge '+tc+'" style="margin-left:auto;flex-shrink:0;">'+(a.type==='crit'?'CRITICAL':a.type==='warn'?'WARNING':'INFO')+'</span></div><div class="ai-desc">'+a.desc+'</div><div class="ai-meta">SIGNAL: '+a.sig+' · '+a.ago+' · SEV: '+a.sev+'</div>'+(full?'<div class="ai-acts"><button class="btn btn-safe btn-xs" onclick="toast(\'Action Taken\',\'Alert handled — all parties notified\',\'✅\',\'safe\')">Take Action</button><button class="btn btn-outline btn-xs" onclick="toast(\'Notified\',\'Alert shared with team\',\'📩\',\'\')">Notify Team</button><button class="btn btn-outline btn-xs" onclick="toast(\'Resolved\',\'Alert marked as resolved\',\'✓\',\'\')">Resolve</button></div>':'')+'</div></div>';
+}
+function shipHTML(s){
+  var cls=s.type==='danger'?'shcard-d':s.type==='warn'?'shcard-w':'';
+  var pcls=s.type==='danger'?'p-danger':s.type==='warn'?'p-warn':s.type==='ok'?'p-ok':'p-transit';
+  var fcol=s.type==='danger'?'var(--red)':s.type==='warn'?'var(--yellow)':s.type==='ok'?'var(--green)':'var(--g6)';
+  return '<div class="shcard '+cls+'"><div class="sh-hdr"><div><div class="sh-id">'+s.id+'</div><div class="sh-prod">'+s.prod+'</div></div><span class="pill '+pcls+'">'+s.st+'</span></div><div class="sh-meta"><div class="sh-m">'+s.mode+' <span>'+s.carrier+'</span></div><div class="sh-m">From <span>'+s.from+'</span></div><div class="sh-m">To <span>'+s.to+'</span></div><div class="sh-m">ETA <span>'+s.eta+'</span></div></div>'+(s.sig?'<div class="sh-sig">⚠️ '+s.sig+'</div>':'')+'<div class="sh-prog"><div class="sh-fill" style="width:'+s.pct+'%;background:'+fcol+'"></div></div><div class="sh-acts"><button class="btn btn-outline btn-xs" onclick="toast(\'Tracking\',\'Live tracking opened for '+s.id+'\',\'📍\',\'\')">Track Live</button>'+((s.type==='danger'||s.type==='warn')?'<button class="btn btn-warn btn-xs" onclick="toast(\'Notified\',\'All parties notified\',\'📩\',\'warn\')">Notify All</button>':'')+'</div></div>';
+}
+
+// ─── OVERVIEW ───
+function renderOverview(){
+  var circ=2*Math.PI*21;
+  document.getElementById('main').innerHTML='<div class="sup">'+
+    '<div class="phd"><div class="ptitle">Supply Chain Command Centre</div><div class="psub"><span class="ldot"></span>'+curData.company+' · 15 signals active · Updated just now</div></div>'+
+    '<div class="dis-score">'+
+      '<div class="ds-ring"><svg width="60" height="60" viewBox="0 0 60 60"><circle cx="30" cy="30" r="21" fill="none" stroke="var(--g5)" stroke-width="5"/><circle cx="30" cy="30" r="21" fill="none" stroke="var(--red)" stroke-width="5" stroke-dasharray="'+circ.toFixed(1)+'" stroke-dashoffset="'+(circ*0.28).toFixed(1)+'" stroke-linecap="round"/></svg><div class="ds-num">7.2</div></div>'+
+      '<div class="ds-info"><div class="ds-title">⚠️ Global Disruption Score: HIGH (7.2/10)</div><div class="ds-desc">3 critical signals active. Port congestion at JNPT, NH48 road block, and rising air freight rates indicate a cascade event within 48–72 hours. <strong style="color:var(--yellow)">Immediate action recommended.</strong></div></div>'+
+      '<button class="btn btn-danger btn-sm" onclick="go(\'cascade\')">View Cascade →</button>'+
+    '</div>'+
+    '<div class="stats-row">'+
+      '<div class="sc"><div class="sc-lbl">Active Shipments</div><div class="sc-val cw">247</div><div class="sc-chg cm">↑ 12 from yesterday</div></div>'+
+      '<div class="sc"><div class="sc-lbl">Critical Alerts</div><div class="sc-val cr">3</div><div class="sc-chg cr">↑ 2 new this hour</div></div>'+
+      '<div class="sc"><div class="sc-lbl">At-Risk</div><div class="sc-val cy">11</div><div class="sc-chg cm">Needs monitoring</div></div>'+
+      '<div class="sc"><div class="sc-lbl">On-Time Rate</div><div class="sc-val cg">87%</div><div class="sc-chg cg">↑ 3% this week</div></div>'+
+      '<div class="sc"><div class="sc-lbl">Revenue at Risk</div><div class="sc-val cr">₹4.2Cr</div><div class="sc-chg cm">Based on delays</div></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div class="panel"><div class="phdr"><div><div class="ptname">🚨 Critical Alerts</div><div class="ptsub">Requires immediate action</div></div><span class="badge bd-r">3 CRITICAL</span></div>'+
+        ALERT_DATA.slice(0,3).map(function(a){return alertHTML(a,false);}).join('')+
+        '<button class="btn btn-g btn-sm" style="width:100%;margin-top:8px;" onclick="go(\'alerts\')">View All Alerts →</button>'+
+      '</div>'+
+      '<div class="panel"><div class="phdr"><div><div class="ptname">📡 Signal Monitor</div><div class="ptsub">Live right now</div></div><span class="badge bd-y">4 AT RISK</span></div>'+
+        '<div class="sigmon" style="grid-template-columns:1fr 1fr;">'+SIG_DATA.slice(0,8).map(sigHTML).join('')+'</div>'+
+      '</div>'+
+    '</div>'+
+    ((curRole==='scm'||curRole==='manufacturer')?
+    '<div class="panel"><div class="phdr"><div class="ptname">🔔 Decisions Needed From You</div><span class="badge bd-y">2 PENDING</span></div>'+
+      '<div class="dec-card"><div class="dec-hd"><span style="font-size:15px;">🔴</span><div class="dec-title">NH48 Blocked — Noida to Mumbai Shipment</div><span class="badge bd-r">YOUR DECISION</span></div>'+
+        '<div class="dec-desc">NH48 flooded near Vadodara. Your 50,000 phone shipment to Flipkart will be delayed 3 days. Logistics is awaiting your instruction.</div>'+
+        '<div class="dec-opts">'+
+          '<div class="dec-opt"><div><div class="do-name">✈️ Option A — Air Freight</div><div class="do-det">Cost: ₹8,00,000 extra · Delivery: Tomorrow 11 AM · Saves ₹42L penalty</div></div><button class="btn btn-safe btn-sm" onclick="approveOpt(\'A\')">Approve</button></div>'+
+          '<div class="dec-opt"><div><div class="do-name">🚛 Option B — Reroute via NH27</div><div class="do-det">Extra: 2.5 hrs · Cost: ₹2,000 toll · New ETA: 5:30 PM today</div></div><button class="btn btn-outline btn-sm" onclick="approveOpt(\'B\')">Approve</button></div>'+
+          '<div class="dec-opt"><div><div class="do-name">⏳ Option C — Wait for NH48</div><div class="do-det">Wait: 3 days · Flipkart penalty risk: ~₹50L · Not recommended</div></div><button class="btn btn-g btn-sm" onclick="approveOpt(\'C\')">Select</button></div>'+
+        '</div>'+
+      '</div>'+
+    '</div>':'')+''+
+    '<div class="panel"><div class="phdr"><div class="ptname">🗺️ Live Shipment Map</div><button class="btn btn-outline btn-xs" onclick="go(\'fleet\')">Full Fleet →</button></div>'+
+      '<div id="map-main" class="map-box" style="height:300px;"></div>'+
+    '</div>'+
+  '</div>';
+  // Delay map init to ensure DOM is ready
+  setTimeout(function(){
+    buildMap('map-main',20.5937,78.9629,5,[
+      {lat:28.61,lng:77.21,col:'#d63535',label:'Samsung Noida — Delayed 🔴',big:true},
+      {lat:23.02,lng:72.57,col:'#d63535',label:'Tata Chemicals — Blocked 🔴',big:true},
+      {lat:19.07,lng:72.88,col:'#c49a0a',label:'JNPT Mumbai — Congested ⚠️',big:true},
+      {lat:18.52,lng:73.86,col:'#1f9e4a',label:'Pune — On Route 🟢'},
+      {lat:12.97,lng:77.59,col:'#1f9e4a',label:'Bangalore — Normal 🟢'},
+      {lat:13.08,lng:80.27,col:'#d63535',label:'Chennai — Strike Alert 🔴'},
+      {lat:22.57,lng:88.36,col:'#1f9e4a',label:'Kolkata — Normal 🟢'},
+    ]);
+  },400);
+}
+function approveOpt(opt){
+  toast('Option '+opt+' Approved','Logistics team notified. Executing immediately.','✅','safe');
+  setTimeout(function(){toast('Driver Updated','Rajesh Kumar — new route sent + voice alert triggered','🚛','');},1100);
+  setTimeout(function(){toast('Flipkart Informed','New ETA: 5:30 PM communicated to Flipkart team','📩','');},2200);
+}
+
+// ─── ALERTS ───
+function renderAlerts(){
+  document.getElementById('main').innerHTML='<div class="sup">'+
+    '<div class="phd"><div class="ptitle">⚠️ Live Alerts Centre</div><div class="psub"><span class="ldot"></span>Real-time disruption intelligence · Auto-refreshes every 60s</div></div>'+
+    '<div class="stats-row">'+
+      '<div class="sc"><div class="sc-lbl">Critical</div><div class="sc-val cr">3</div></div>'+
+      '<div class="sc"><div class="sc-lbl">Warning</div><div class="sc-val cy">8</div></div>'+
+      '<div class="sc"><div class="sc-lbl">Info</div><div class="sc-val cw">14</div></div>'+
+      '<div class="sc"><div class="sc-lbl">Resolved Today</div><div class="sc-val cg">22</div></div>'+
+    '</div>'+
+    '<div class="tabs">'+
+      '<button class="tab active" onclick="filterAlert(\'all\',this)">All Alerts</button>'+
+      '<button class="tab" onclick="filterAlert(\'crit\',this)">Critical Only</button>'+
+      '<button class="tab" onclick="filterAlert(\'warn\',this)">Warnings</button>'+
+      '<button class="tab" onclick="filterAlert(\'info\',this)">Info</button>'+
+    '</div>'+
+    '<div class="panel" id="alert-list">'+ALERT_DATA.map(function(a){return alertHTML(a,true);}).join('')+'</div>'+
+  '</div>';
+}
+function filterAlert(type,btn){
+  document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('active');}); btn.classList.add('active');
+  var f=type==='all'?ALERT_DATA:ALERT_DATA.filter(function(a){return a.type===type;});
+  document.getElementById('alert-list').innerHTML=f.length?f.map(function(a){return alertHTML(a,true);}).join(''):'<p style="color:var(--g7);text-align:center;padding:20px;font-size:12px;">No alerts in this category</p>';
+}
+
+// ─── SIGNALS ───
+function renderSignals(){
+  var groups=[
+    {t:'🏗️ Port & Terminal',sigs:SIG_DATA.slice(0,3)},
+    {t:'🚛 Land & Transit',sigs:SIG_DATA.slice(3,6)},
+    {t:'🌡️ Weather & Environment',sigs:SIG_DATA.slice(6,9)},
+    {t:'📈 Economic & Labor',sigs:SIG_DATA.slice(9,15)},
+  ];
+  document.getElementById('main').innerHTML='<div class="sup">'+
+    '<div class="phd"><div class="ptitle">📡 Signal Intelligence Monitor</div><div class="psub"><span class="ldot"></span>All 15 live signals · Updated every 60s</div></div>'+
+    '<div class="stats-row">'+
+      '<div class="sc"><div class="sc-lbl">Total Signals</div><div class="sc-val cw">15</div></div>'+
+      '<div class="sc"><div class="sc-lbl">Critical</div><div class="sc-val cr">3</div></div>'+
+      '<div class="sc"><div class="sc-lbl">At Risk</div><div class="sc-val cy">6</div></div>'+
+      '<div class="sc"><div class="sc-lbl">Healthy</div><div class="sc-val cg">6</div></div>'+
+    '</div>'+
+    '<div class="g2">'+groups.map(function(g){
+      return '<div class="panel"><div class="phdr"><div class="ptname">'+g.t+'</div></div><div class="sigmon" style="grid-template-columns:1fr 1fr 1fr;">'+g.sigs.map(sigHTML).join('')+'</div></div>';
+    }).join('')+'</div>'+
+  '</div>';
+}
+
+// ─── SHIPMENTS ───
+function renderShipments(){
+  document.getElementById('main').innerHTML='<div class="sup">'+
+    '<div class="phd"><div class="ptitle">📦 Shipment Tracker</div><div class="psub">All active shipments · Role-filtered view</div></div>'+
+    '<div style="display:flex;gap:9px;margin-bottom:11px;flex-wrap:wrap;">'+
+      '<div class="srch" style="flex:1;min-width:180px;margin:0;"><span style="color:var(--g7);">🔍</span><input placeholder="Search shipments..." id="sh-search" oninput="filterShips(this.value)"/></div>'+
+      '<button class="btn btn-p btn-sm" onclick="toast(\'Coming Soon\',\'New shipment form opening...\',\'📦\',\'safe\')">+ New Shipment</button>'+
+    '</div>'+
+    '<div class="tabs">'+
+      '<button class="tab active" onclick="tabShip(\'all\',this)">All ('+SHIP_DATA.length+')</button>'+
+      '<button class="tab" onclick="tabShip(\'incoming\',this)">Incoming</button>'+
+      '<button class="tab" onclick="tabShip(\'delayed\',this)">Delayed</button>'+
+    '</div>'+
+    '<div id="ship-list">'+SHIP_DATA.map(shipHTML).join('')+'</div>'+
+  '</div>';
+}
+function filterShips(v){
+  var f=SHIP_DATA.filter(function(s){return JSON.stringify(s).toLowerCase().includes(v.toLowerCase());});
+  document.getElementById('ship-list').innerHTML=f.length?f.map(shipHTML).join(''):'<p style="color:var(--g7);text-align:center;padding:20px;font-size:12px;">No shipments found</p>';
+}
+function tabShip(t,btn){
+  document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('active');}); btn.classList.add('active');
+  var f=t==='delayed'?SHIP_DATA.filter(function(s){return s.type==='danger'||s.type==='warn';}):SHIP_DATA;
+  document.getElementById('ship-list').innerHTML=f.map(shipHTML).join('');
+}
+
+// ─── FLEET ───
+function renderFleet(){
+  var trucks=[
+    {truck:'MH04 AB 1234',drv:'Rajesh Kumar',rt:'Ahmedabad→Noida',iss:'NH48 BLOCKED',t:'crit'},
+    {truck:'GJ05 CD 5678',drv:'Suresh Patel',rt:'Surat→Mumbai',iss:'HEAVY TRAFFIC',t:'warn'},
+    {truck:'KA01 EF 9012',drv:'Mohan Rao',rt:'Bangalore→Chennai',iss:'FUEL LOW',t:'warn'},
+    {truck:'MH12 GH 3456',drv:'Anil Kumar',rt:'Pune→Delhi',iss:'DRIVER REST',t:'info'},
+  ];
+  document.getElementById('main').innerHTML='<div class="sup">'+
+    '<div class="phd"><div class="ptitle">🚛 Fleet & Route Intelligence</div><div class="psub"><span class="ldot"></span>Live GPS · AI rerouting · Driver management</div></div>'+
+    '<div class="stats-row">'+
+      '<div class="sc"><div class="sc-lbl">Total Fleet</div><div class="sc-val cw">47</div></div>'+
+      '<div class="sc"><div class="sc-lbl">On Track</div><div class="sc-val cg">32</div></div>'+
+      '<div class="sc"><div class="sc-lbl">At Risk</div><div class="sc-val cy">11</div></div>'+
+      '<div class="sc"><div class="sc-lbl">Blocked</div><div class="sc-val cr">4</div></div>'+
+    '</div>'+
+    '<div class="panel"><div class="phdr"><div class="ptname">🗺️ Live Fleet Map</div><div class="ptsub">Click any marker for details</div></div>'+
+      '<div id="map-fleet" class="map-box" style="height:320px;"></div>'+
+    '</div>'+
+    '<div class="g2">'+
+      '<div class="panel"><div class="phdr"><div class="ptname">🔴 Needs Attention</div><span class="badge bd-r">4</span></div>'+
+        trucks.map(function(t){
+          return '<div class="ai '+(t.t==='crit'?'ai-crit':t.t==='warn'?'ai-warn':'ai-info')+'"><div class="ai-dot '+(t.t==='crit'?'dc':t.t==='warn'?'dw':'di')+'"></div><div class="ai-body"><div class="ai-title">'+t.truck+' — '+t.drv+'</div><div class="ai-desc">'+t.rt+' · <strong>'+t.iss+'</strong></div><div class="ai-acts"><button class="btn btn-outline btn-xs" onclick="toast(\'Rerouting\',\'New route sent to '+t.drv+'\',\'🗺️\',\'\')">Reroute</button><button class="btn btn-outline btn-xs" onclick="toast(\'Calling\',\'Connecting to '+t.drv+'...\',\'📞\',\'\')">📞 Call</button></div></div></div>';
+        }).join('')+
+      '</div>'+
+      '<div class="panel"><div class="phdr"><div class="ptname">👥 Driver Roster</div></div>'+
+        [['Rajesh Kumar','MH04 AB 1234','BLOCKED'],['Suresh Patel','GJ05 CD 5678','DELAYED'],['Mohan Rao','KA01 EF 9012','ON ROUTE'],['Anil Kumar','MH12 GH 3456','ON ROUTE'],['Vikram Singh','DL01 IJ 7890','DELIVERED']].map(function(d){
+          return '<div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);"><div style="width:26px;height:26px;border-radius:50%;background:var(--g3);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">🧑‍✈️</div><div style="flex:1;"><div style="font-size:11px;font-weight:700;">'+d[0]+'</div><div style="font-size:9px;color:var(--g7);font-family:var(--fm);">'+d[1]+'</div></div><span class="pill '+(d[2]==='BLOCKED'||d[2]==='DELAYED'?'p-danger':d[2]==='ON ROUTE'?'p-transit':'p-ok')+'">'+d[2]+'</span></div>';
+        }).join('')+
+      '</div>'+
+    '</div>'+
+  '</div>';
+  setTimeout(function(){
+    buildMap('map-fleet',20.5937,78.9629,5,[
+      {lat:22.3,lng:72.9,col:'#d63535',label:'MH04 AB 1234 — Rajesh — BLOCKED',big:true},
+      {lat:21.1,lng:79.1,col:'#1f9e4a',label:'GJ05 CD 5678 — Suresh — ON ROUTE'},
+      {lat:19.9,lng:75.3,col:'#c49a0a',label:'KA01 EF 9012 — Mohan — AT RISK'},
+      {lat:25.4,lng:81.8,col:'#1f9e4a',label:'MH12 GH 3456 — Anil — ON ROUTE'},
+      {lat:28.4,lng:77.1,col:'#555555',label:'DL01 IJ 7890 — Vikram — DELIVERED'},
+      {lat:23.7,lng:72.4,col:'#1f9e4a',label:'GJ12 KL 1234 — ON ROUTE'},
+      {lat:17.4,lng:78.5,col:'#1f9e4a',label:'TS05 MN 5678 — ON ROUTE'},
+    ]);
+  },400);
+}
+
+// ─── INVENTORY ───
+function renderInventory(){
+  var items=[
+    {p:'Samsung Galaxy S25 256GB',s:200,d:180,days:1.1,i:'Nov 17 DELAYED',r:'CRITICAL'},
+    {p:'Apple AirPods Pro 2',s:80,d:60,days:1.3,i:'Nov 16 AT RISK',r:'CRITICAL'},
+    {p:'Nike Air Max 2024',s:150,d:45,days:3.3,i:'Nov 14 ON TIME',r:'HIGH'},
+    {p:"Levi's 511 Slim",s:320,d:40,days:8,i:'Nov 20 ON TIME',r:'MEDIUM'},
+  ];
+  document.getElementById('main').innerHTML='<div class="sup">'+
+    '<div class="phd"><div class="ptitle">🏬 Inventory Intelligence</div><div class="psub">Stock monitoring · Stockout prediction · Capacity management</div></div>'+
+    '<div class="stats-row">'+
+      '<div class="sc"><div class="sc-lbl">SKUs Tracked</div><div class="sc-val cw">1,247</div></div>'+
+      '<div class="sc"><div class="sc-lbl">Stockout Risk</div><div class="sc-val cr">8 SKUs</div></div>'+
+      '<div class="sc"><div class="sc-lbl">Overstock</div><div class="sc-val cy">23 SKUs</div></div>'+
+      '<div class="sc"><div class="sc-lbl">Capacity Used</div><div class="sc-val cy">78%</div></div>'+
+    '</div>'+
+    '<div class="panel"><div class="phdr"><div class="ptname">⚠️ Stockout Risk Items</div><span class="badge bd-r">4 CRITICAL</span></div>'+
+      items.map(function(x){
+        return '<div style="background:var(--g3);border:1px solid '+(x.r==='CRITICAL'?'rgba(214,53,53,.18)':x.r==='HIGH'?'rgba(196,154,10,.13)':'var(--border)')+';border-radius:var(--r2);padding:11px;margin-bottom:8px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;"><div style="font-size:11px;font-weight:700;">'+x.p+'</div><span class="badge '+(x.r==='CRITICAL'?'bd-r':x.r==='HIGH'?'bd-y':'bd-w')+'">'+x.r+'</span></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:7px;"><div><div style="font-size:8px;color:var(--g7);">STOCK</div><div style="font-size:15px;font-weight:700;">'+x.s+'</div></div><div><div style="font-size:8px;color:var(--g7);">DAILY SALES</div><div style="font-size:15px;font-weight:700;">'+x.d+'</div></div><div><div style="font-size:8px;color:var(--g7);">DAYS LEFT</div><div style="font-size:15px;font-weight:700;color:'+(x.days<2?'var(--red)':x.days<5?'var(--yellow)':'var(--green)')+'">'+x.days+'</div></div></div><div class="inv-bar"><div class="inv-fill" style="width:'+Math.min(100,(x.s/(x.d*10))*100)+'%;background:'+(x.days<2?'var(--red)':x.days<5?'var(--yellow)':'var(--green)')+'"></div></div><div style="font-size:9px;color:var(--g7);margin-top:4px;">Next: '+x.i+'</div><div style="display:flex;gap:5px;margin-top:7px;"><button class="btn btn-danger btn-xs" onclick="toast(\'Order Placed\',\'Emergency air freight ordered\',\'🚨\',\'crit\')">🚨 Air Freight</button><button class="btn btn-outline btn-xs" onclick="toast(\'Alerted\',\'Category team notified\',\'📩\',\'\')">Alert Team</button></div></div>';
+      }).join('')+
+    '</div>'+
+  '</div>';
+}
+
+// ─── CASCADE ───
+function renderCascade(){
+  var nodes=[
+    {i:'🌧️',n:'Gujarat Flood',s:'ROOT CAUSE',t:'d'},
+    {i:'🚛',n:'NH48 Blocked',s:'3 TRUCKS',t:'d'},
+    {i:'⛏️',n:'Tata Chem',s:'+3 DAY DELAY',t:'d'},
+    {i:'🏭',n:'Samsung Prod',s:'AT RISK',t:'w'},
+    {i:'🏬',n:'Flipkart WH',s:'STOCK LOW',t:'w'},
+    {i:'🏪',n:'Retail Shelf',s:'STOCKOUT 1.1d',t:'w'},
+    {i:'💸',n:'Revenue',s:'₹4.2CR RISK',t:'d'},
+  ];
+  document.getElementById('main').innerHTML='<div class="sup">'+
+    '<div class="phd"><div class="ptitle">🔗 Cascade Impact Map</div><div class="psub">AI disruption cascade simulation</div></div>'+
+    '<div style="background:rgba(214,53,53,.04);border:1px solid rgba(214,53,53,.12);border-radius:var(--r);padding:13px;margin-bottom:13px;">'+
+      '<div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;"><span style="font-size:16px;">🌧️</span><div style="font-size:12px;font-weight:700;">Active Cascade: Gujarat Flooding → NH48 Block</div><span class="badge bd-r">CASCADING NOW</span></div>'+
+      '<div style="font-size:10px;color:var(--g8);line-height:1.6;"><strong style="color:var(--red);">Root Cause:</strong> Heavy rain in Vadodara — 280mm in 24hrs · <strong style="color:var(--yellow);">Detected:</strong> 14 minutes ago · <strong>Revenue at Risk:</strong> ₹4.2 Crore</div>'+
+    '</div>'+
+    '<div class="panel"><div class="phdr"><div class="ptname">Disruption Chain Visualization</div></div>'+
+      '<div style="overflow-x:auto;padding:8px 0;"><div style="display:flex;align-items:center;min-width:max-content;">'+
+        nodes.map(function(n,i,a){
+          return '<div class="cn cn-'+(n.t==='d'?'d':n.t==='w'?'w':'ok')+'"><div class="cn-ico">'+n.i+'</div><div class="cn-name">'+n.n+'</div><div class="cn-st" style="color:'+(n.t==='d'?'var(--red)':'var(--yellow)')+'">'+n.s+'</div></div>'+(i<a.length-1?'<div class="cn-arr">→</div>':'');
+        }).join('')+
+      '</div></div>'+
+    '</div>'+
+    '<div class="panel"><div class="phdr"><div class="ptname">🤖 AI Recommended Actions</div><button class="btn btn-p btn-sm" onclick="execAll()">⚡ Execute All</button></div>'+
+      [
+        {n:1,a:'Reroute Truck MH04 AB 1234 via NH27',i:'Saves 3 days, adds only 2.5 hrs',u:'IMMEDIATE',t:'r'},
+        {n:2,a:'Book partial air freight for 5,000 critical Samsung units',i:'Prevents Flipkart stockout — ₹8L vs ₹50L penalty',u:'TODAY',t:'y'},
+        {n:3,a:'Notify Flipkart team — shipment delay incoming',i:'They can activate alternate supplier stock',u:'TODAY',t:'y'},
+        {n:4,a:'Alert Samsung production — plan 3-day buffer',i:'Prevents full production line halt',u:'THIS WEEK',t:'w'},
+      ].map(function(a){
+        return '<div style="display:flex;align-items:center;gap:11px;background:var(--g3);border:1px solid var(--border);border-radius:var(--r2);padding:10px;margin-bottom:7px;"><div style="width:24px;height:24px;border-radius:50%;background:var(--g5);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">'+a.n+'</div><div style="flex:1;"><div style="font-size:11px;font-weight:700;margin-bottom:1px;">'+a.a+'</div><div style="font-size:9px;color:var(--g8);">'+a.i+'</div></div><span class="badge '+(a.t==='r'?'bd-r':a.t==='y'?'bd-y':'bd-w')+'">'+a.u+'</span><button class="btn btn-outline btn-xs" onclick="toast(\'Executed\',\''+a.a+'\',\'✅\',\'safe\')">Execute</button></div>';
+      }).join('')+
+    '</div>'+
+  '</div>';
+}
+function execAll(){
+  toast('All 4 Actions Executed','Cascade mitigation sent to all parties','⚡','safe');
+  setTimeout(function(){toast('Logistics Notified','Rerouting Rajesh via NH27','🚛','');},700);
+  setTimeout(function(){toast('Air Freight Booked','5,000 units — Blue Dart emergency booking','✈️','');},1400);
+  setTimeout(function(){toast('Flipkart Informed','New ETA communicated. Alternate stock activated.','📩','');},2100);
+}
+
+// ─── FORECAST ───
+function renderForecast(){
+  var forecasts=[
+    {d:'Nov 14–15',e:'NH48 Flood — Gujarat',p:97,i:'HIGH',t:'d',a:'Reroute trucks NOW'},
+    {d:'Nov 16–17',e:'JNPT Port Congestion Peak',p:89,i:'HIGH',t:'d',a:'Book Mundra alternate'},
+    {d:'Nov 20',e:'Air Freight Rate Spike',p:74,i:'MEDIUM',t:'w',a:'Pre-book capacity'},
+    {d:'Nov 28',e:'Chennai Port Strike (Filed)',p:100,i:'CRITICAL',t:'d',a:'Reroute all Chennai'},
+    {d:'Dec 2–5',e:'Bay of Bengal Cyclone Season',p:62,i:'MEDIUM',t:'w',a:'Monitor NHC daily'},
+    {d:'Dec 15',e:'Year-End Port Congestion',p:85,i:'HIGH',t:'d',a:'Book early slots'},
+  ];
+  document.getElementById('main').innerHTML='<div class="sup">'+
+    '<div class="phd"><div class="ptitle">🔮 AI Disruption Forecast</div><div class="psub">Predictive intelligence — next 30 days · 15 live signals + historical patterns</div></div>'+
+    '<div class="stats-row">'+
+      '<div class="sc"><div class="sc-lbl">7-Day Risk</div><div class="sc-val cy">MED-HIGH</div></div>'+
+      '<div class="sc"><div class="sc-lbl">Predicted Delays</div><div class="sc-val cr">7</div></div>'+
+      '<div class="sc"><div class="sc-lbl">Preventable</div><div class="sc-val cg">5 of 7</div></div>'+
+      '<div class="sc"><div class="sc-lbl">Accuracy</div><div class="sc-val cw">91%</div></div>'+
+    '</div>'+
+    '<div class="panel"><div class="phdr"><div class="ptname">📅 30-Day Risk Calendar</div></div>'+
+      forecasts.map(function(f){
+        return '<div style="display:flex;align-items:center;gap:11px;background:var(--g3);border:1px solid '+(f.t==='d'?'rgba(214,53,53,.13)':'rgba(196,154,10,.1)')+';border-radius:var(--r2);padding:10px;margin-bottom:7px;flex-wrap:wrap;"><div style="min-width:70px;font-family:var(--fm);font-size:9px;color:var(--g7);">'+f.d+'</div><div style="flex:1;min-width:110px;"><div style="font-size:11px;font-weight:700;margin-bottom:3px;">'+f.e+'</div><div style="display:flex;align-items:center;gap:5px;"><div style="flex:1;height:2px;background:var(--g5);border-radius:1px;overflow:hidden;max-width:80px;"><div style="height:100%;width:'+f.p+'%;background:'+(f.t==='d'?'var(--red)':'var(--yellow)')+'"></div></div><span style="font-family:var(--fm);font-size:8px;color:'+(f.t==='d'?'var(--red)':'var(--yellow)')+';">'+f.p+'%</span></div></div><span class="badge '+(f.t==='d'?'bd-r':'bd-y')+'">'+f.i+'</span><button class="btn btn-outline btn-xs" onclick="toast(\'Planned\',\''+f.a+'\',\'📅\',\'\')">'+f.a+'</button></div>';
+      }).join('')+
+    '</div>'+
+  '</div>';
+}
+
+// ─── MARKETPLACE ───
+function renderMarketplace(){
+  document.getElementById('main').innerHTML='<div class="sup">'+
+    '<div class="phd"><div class="ptitle">🔍 Supplier & Logistics Marketplace</div><div class="psub">Find verified partners registered on CargoMind</div></div>'+
+    '<div class="tabs"><button class="tab active" id="tab-sup" onclick="mktTab(\'sup\',this)">⛏️ Find Suppliers</button><button class="tab" id="tab-log" onclick="mktTab(\'log\',this)">🚛 Find Logistics</button></div>'+
+    '<div id="mkt-body"></div>'+
+  '</div>';
+  mktTab('sup',document.getElementById('tab-sup'));
+}
+function mktTab(t,btn){
+  document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('active');}); btn.classList.add('active');
+  var html='<div class="panel"><div class="ptname" style="margin-bottom:11px;">'+(t==='sup'?'Search Available Stock':'Find Available Logistics Partner')+'</div>'+
+    '<div class="fg"><label class="fl">'+(t==='sup'?'Material Needed':'From City')+'</label><input class="fi" placeholder="'+(t==='sup'?'e.g. Lithium Cells':'e.g. Ahmedabad')+'"/></div>'+
+    '<button class="btn btn-p btn-sm" onclick="showMktResults(\''+t+'\')">🔍 Search</button></div>'+
+    '<div id="mkt-results"></div>';
+  document.getElementById('mkt-body').innerHTML=html;
+}
+function showMktResults(t){
+  var items=t==='sup'?[
+    {n:'Himadri Chemicals',l:'Kolkata, WB',av:'5,000 kg',by:'Nov 14 ✅',pr:'₹460/kg',rt:'4.8',tr:124},
+    {n:'Neogen Chemicals',l:'Vadodara, GJ',av:'2,000 kg',by:'Nov 16 ⚠️',pr:'₹440/kg',rt:'4.5',tr:89},
+    {n:'Merck Life Science',l:'Mumbai, MH',av:'8,000 kg',by:'Nov 15 ✅',pr:'₹480/kg',rt:'4.9',tr:203},
+  ]:[
+    {n:'Mahindra Logistics',l:'Road · 3 vehicles',av:'Tomorrow 8AM',by:'Nov 15 ✅',pr:'₹45,000',rt:'94%',tr:847},
+    {n:'VRL Logistics',l:'Road · 1 vehicle',av:'Tomorrow 2PM',by:'Nov 15 ⚠️',pr:'₹38,000',rt:'89%',tr:234},
+    {n:'Blue Dart Freight',l:'Road · 2 vehicles',av:'Today 5PM ✅',by:'Nov 13 ✅',pr:'₹62,000',rt:'97%',tr:1203},
+  ];
+  document.getElementById('mkt-results').innerHTML='<div style="font-size:9px;color:var(--g7);font-family:var(--fm);margin:11px 0 7px;">FOUND '+items.length+' RESULTS</div>'+
+    items.map(function(s,i){
+      return '<div class="sup-card" style="'+(i===0?'border-color:rgba(255,255,255,.2);':'')+'"><div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:7px;"><div><div class="sup-name">'+s.n+' '+(i===0?'<span class="badge bd-g">BEST MATCH</span>':'')+'</div><div class="sup-loc">📍 '+s.l+'</div></div><div style="font-size:16px;font-weight:800;">'+s.pr+'</div></div><div class="sup-stats-grid"><div><div class="ss-v cg">'+s.av+'</div><div class="ss-l">AVAILABLE</div></div><div><div class="ss-v">'+s.by+'</div><div class="ss-l">DELIVER BY</div></div><div><div class="ss-v">⭐'+s.rt+'</div><div class="ss-l">RATING</div></div><div><div class="ss-v">'+s.tr+'</div><div class="ss-l">ORDERS</div></div></div><button class="btn btn-p btn-sm" onclick="toast(\'Quote Requested\',\''+s.n+' notified\',\'📩\',\'safe\')">Request Quote</button></div>';
+    }).join('');
+}
+
+// ─── SETTINGS ───
+function renderSettings(){
+  var sources=[['⚓','MarineTraffic'],['🗺️','TomTom Traffic'],['🌊','NOAA Weather'],['⛽','EIA Fuel Data'],['🛃','CBP Border'],['✈️','TAC Air Freight'],['📡','VesselFinder AIS'],['📰','Google News API'],['💧','USGS WaterWatch'],['🌀','NHC Cyclones'],['📊','Trading Economics'],['🚢','SeaVantage'],['📦','Container xChange'],['💻','CSMS Portal'],['🏗️','JNPT Dashboard']];
+  document.getElementById('main').innerHTML='<div class="sup">'+
+    '<div class="phd"><div class="ptitle">⚙️ Settings & Preferences</div></div>'+
+    '<div class="g2">'+
+      '<div class="panel"><div class="phdr"><div class="ptname">👤 Account Details</div></div>'+
+        '<div class="fg"><label class="fl">Full Name</label><input class="fi" value="'+(curData.name||'')+'"/></div>'+
+        '<div class="fg"><label class="fl">Company</label><input class="fi" value="'+(curData.company||'')+'"/></div>'+
+        '<div class="fg"><label class="fl">Email</label><input class="fi" value="'+(curData.email||'demo@cargomind.ai')+'"/></div>'+
+        '<button class="btn btn-p btn-sm" onclick="toast(\'Saved\',\'Profile updated successfully\',\'✅\',\'safe\')">Save Changes</button>'+
+      '</div>'+
+      '<div class="panel"><div class="phdr"><div class="ptname">🔔 Alert Preferences</div></div>'+
+        ['Critical port congestion alerts','Weather disruption warnings','Labor strike notices','Air freight rate spikes','Fleet delay notifications'].map(function(item,i){
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);"><div style="font-size:11px;">'+item+'</div><div style="width:30px;height:16px;background:var(--g7);border-radius:8px;cursor:pointer;position:relative;" onclick="toast(\'Updated\',\'Preference saved\',\'✓\',\'\')"><div style="position:absolute;top:2px;right:2px;width:12px;height:12px;background:white;border-radius:50%;"></div></div></div>';
+        }).join('')+
+      '</div>'+
+    '</div>'+
+    '<div class="panel"><div class="phdr"><div class="ptname">📡 Connected Data Sources</div><span class="badge bd-g">15 ACTIVE</span></div>'+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px;">'+
+        sources.map(function(s){
+          return '<div style="background:var(--g3);border:1px solid rgba(31,158,74,.1);border-radius:var(--r2);padding:9px;display:flex;align-items:center;gap:6px;"><span style="font-size:14px;">'+s[0]+'</span><div><div style="font-size:10px;font-weight:600;">'+s[1]+'</div><div style="font-size:8px;color:var(--green);font-family:var(--fm);">● CONNECTED</div></div></div>';
+        }).join('')+
+      '</div>'+
+    '</div>'+
+  '</div>';
+}
+
+// ─── DRIVER VIEWS ───
+var DRIVER_LANGS={
+  hindi:{code:'hi-IN',greeting:'नमस्ते',routeChanged:'रास्ता बदल गया है!',routeMsg:'NH48 पर बाढ़ है। Fleet Manager ने नया रास्ता NH27 भेजा है।',routeNote:'(Route changed — NH48 flooded. New route via NH27 approved.)',voiceMsg:'ध्यान दें! रास्ता बदल गया है। NH48 पर बाढ़ है। NH27 से जाइए।'},
+  english:{code:'en-IN',greeting:'Hello',routeChanged:'Route Changed!',routeMsg:'NH48 is flooded. Your Fleet Manager has sent a new route via NH27.',routeNote:'(New route approved — ETA updated to 5:30 PM)',voiceMsg:'Attention! Route changed. NH48 is flooded. Company approved NH27. Please take NH27.'},
+  gujarati:{code:'gu-IN',greeting:'નમસ્તે',routeChanged:'રસ્તો બદલ્યો છે!',routeMsg:'NH48 પૂર છે. Fleet Manager NH27 ની route મોકલ્યો.',routeNote:'(Route changed — NH48 flooded. New route via NH27 approved.)',voiceMsg:'ધ્યાન આપો! રસ્તો બદલ્યો. NH48 પૂર. NH27 થી જાઓ.'},
+  marathi:{code:'mr-IN',greeting:'नमस्कार',routeChanged:'रस्ता बदलला!',routeMsg:'NH48 वर पूर. Fleet Manager ने NH27 मार्ग पाठवला.',routeNote:'(Route changed — NH48 flooded. New route via NH27 approved.)',voiceMsg:'लक्ष द्या! मार्ग बदलला. NH48 पूर. NH27 ने जा.'},
+  telugu:{code:'te-IN',greeting:'నమస్కారం',routeChanged:'మార్గం మారింది!',routeMsg:'NH48 వరదలు. Fleet Manager NH27 మార్గం పంపారు.',routeNote:'(Route changed — NH48 flooded. New route via NH27 approved.)',voiceMsg:'శ్రద్ధ వహించండి! మార్గం మారింది. NH48 వరదలు. NH27 తీసుకోండి.'},
+};
+function getLang(){ return DRIVER_LANGS[curData.lang||'hindi']||DRIVER_LANGS.hindi; }
+function drvNav(view,btn){
+  document.querySelectorAll('.bn-item').forEach(function(b){b.classList.remove('active');}); if(btn) btn.classList.add('active');
+  destroyAllMaps();
+  var vs={home:renderDriverHome,route:renderDriverRoute,alerts:renderDriverAlerts,profile:renderDriverProfile};
+  if(vs[view]) vs[view]();
+}
+function renderDriverHome(){
+  var L=getLang();
+  document.getElementById('main').innerHTML='<div class="dr-view sup">'+
+    '<div style="text-align:center;padding:14px 0 16px;">'+
+      '<div style="font-size:19px;font-weight:800;">'+L.greeting+', Rajesh 👋</div>'+
+      '<div style="color:var(--g7);font-size:9px;margin-top:2px;font-family:var(--fm);">MAHINDRA LOGISTICS · MH04 AB 1234</div>'+
+      '<div style="margin-top:7px;"><select class="fs" style="font-size:10px;padding:4px 8px;width:auto;" onchange="curData.lang=this.value;renderDriverHome()">'+
+        Object.keys(DRIVER_LANGS).map(function(k){return '<option value="'+k+'" '+(((curData.lang||'hindi')===k)?'selected':'')+'>'+DRIVER_LANGS[k].greeting+' ('+k.charAt(0).toUpperCase()+k.slice(1)+')</option>';}).join('')+
+      '</select></div>'+
+    '</div>'+
+    '<div class="dr-alert">'+
+      '<div style="font-size:24px;margin-bottom:5px;">🔴</div>'+
+      '<div style="font-size:14px;font-weight:800;color:var(--red);margin-bottom:5px;">'+L.routeChanged+'</div>'+
+      '<div style="font-size:11px;color:var(--g8);line-height:1.6;margin-bottom:11px;">'+L.routeMsg+'<br><span style="font-size:9px;color:var(--g7);">'+L.routeNote+'</span></div>'+
+      '<button class="btn btn-p btn-sm" onclick="drvNav(\'route\',document.querySelectorAll(\'.bn-item\')[1]);speakVoice()">View New Route 🗺️</button>'+
+    '</div>'+
+    '<div class="dr-card">'+
+      '<div style="font-size:12px;font-weight:700;margin-bottom:12px;">📦 Today\'s Assignment</div>'+
+      '<div class="rt-step"><div><div class="rt-dot" style="background:#fff;"></div><div class="rt-line"></div></div><div><div style="font-size:9px;color:var(--g7);margin-bottom:1px;">PICKUP</div><div style="font-weight:700;font-size:12px;">Tata Chemicals, Ahmedabad</div><div style="font-size:10px;color:var(--g8);">Lithium Cells · 10,000 kg · 200 boxes</div></div></div>'+
+      '<div class="rt-step"><div><div class="rt-dot" style="background:var(--green);"></div></div><div><div style="font-size:9px;color:var(--g7);margin-bottom:1px;">DELIVERY</div><div style="font-weight:700;font-size:12px;">Samsung Factory, Noida</div><div style="font-size:10px;color:var(--g8);">Gate 3 · Arjun Mehta: +91 87654 32109</div></div></div>'+
+      '<div style="background:var(--g3);border-radius:var(--r2);padding:9px;margin-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:9px;">'+
+        '<div><div style="font-size:8px;color:var(--g7);">DISTANCE</div><div style="font-weight:700;">1,100 km</div></div>'+
+        '<div><div style="font-size:8px;color:var(--g7);">NEW ETA</div><div style="font-weight:700;color:var(--yellow);">5:30 PM</div></div>'+
+        '<div><div style="font-size:8px;color:var(--g7);">ROUTE</div><div style="font-weight:700;font-size:10px;">NH27 (New)</div></div>'+
+        '<div><div style="font-size:8px;color:var(--g7);">CARGO</div><div style="font-weight:700;font-size:10px;">10,000 kg</div></div>'+
+      '</div>'+
+    '</div>'+
+    '<button class="big-btn bb-green" onclick="toast(\'Trip Started\',\'Location tracking active. Safe driving!\',\'🚛\',\'safe\')">✅ Start Trip</button>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">'+
+      '<button class="big-btn" style="background:var(--g3);border:1px solid var(--border2);color:#fff;font-size:11px;padding:12px;" onclick="toast(\'Calling...\',\'Connecting to Suresh Singh...\',\'📞\',\'\')">📞 Call Manager</button>'+
+      '<button class="big-btn" style="background:rgba(214,53,53,.07);border:1px solid rgba(214,53,53,.2);color:var(--red);font-size:11px;padding:12px;" onclick="toast(\'SOS Sent\',\'Emergency alert sent to fleet manager\',\'🆘\',\'crit\')">🆘 Emergency</button>'+
+    '</div>'+
+  '</div>';
+}
+function renderDriverRoute(){
+  document.getElementById('main').innerHTML='<div class="sup" style="padding-bottom:80px;">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0 11px;">'+
+      '<div style="font-size:15px;font-weight:800;">🗺️ Route</div>'+
+      '<span class="badge bd-y">NH27 — New Route</span>'+
+    '</div>'+
+    '<div id="map-driver" class="map-box" style="height:calc(100vh - 240px);min-height:320px;"></div>'+
+    '<div style="background:var(--g2);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-top:10px;">'+
+      '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:10px;color:var(--g7);">Next turn:</span><span style="font-size:10px;font-weight:700;">Right on NH27 — 12 km</span></div>'+
+      '<div style="display:flex;justify-content:space-between;"><span style="font-size:10px;color:var(--g7);">New ETA:</span><span style="font-size:10px;font-weight:700;color:var(--yellow);">5:30 PM</span></div>'+
+    '</div>'+
+  '</div>';
+  setTimeout(function(){
+    buildMap('map-driver',22.3,73.5,7,[
+      {lat:23.02,lng:72.57,col:'#1f9e4a',label:'PICKUP — Tata Chemicals, Ahmedabad',big:true},
+      {lat:22.3,lng:73.5,col:'#ffffff',label:'🚛 Rajesh Kumar — Current Position',big:true},
+      {lat:28.61,lng:77.21,col:'#d63535',label:'DELIVERY — Samsung Factory, Noida',big:true},
+    ],[
+      {pts:[[23.02,72.57],[22.5,73.0],[22.3,73.5],[21.8,74.2],[25.0,76.5],[26.5,77.5],[28.61,77.21]],col:'rgba(255,255,255,0.5)'}
+    ]);
+  },400);
+}
+function renderDriverAlerts(){
+  document.getElementById('main').innerHTML='<div class="dr-view sup">'+
+    '<div style="font-size:17px;font-weight:800;padding:14px 0;">🔔 Alerts</div>'+
+    [
+      {t:'Route Changed',d:'NH48 closed — take NH27',ago:'14 min ago',type:'crit'},
+      {t:'Fuel Stop Needed',d:'HP Fuel Pump in next 200 km',ago:'1 hr ago',type:'warn'},
+      {t:'Rest Time',d:'4 hours driving — please take a break',ago:'2 hr ago',type:'info'},
+    ].map(function(a){
+      return '<div class="ai '+(a.type==='crit'?'ai-crit':a.type==='warn'?'ai-warn':'ai-info')+'"><div class="ai-dot '+(a.type==='crit'?'dc':a.type==='warn'?'dw':'di')+'"></div><div class="ai-body"><div class="ai-title">'+a.t+'</div><div class="ai-desc">'+a.d+'</div><div class="ai-meta">'+a.ago+'</div></div></div>';
+    }).join('')+
+  '</div>';
+}
+function renderDriverProfile(){
+  document.getElementById('main').innerHTML='<div class="dr-view sup">'+
+    '<div style="text-align:center;padding:18px 0;"><div style="width:52px;height:52px;border-radius:50%;background:var(--g3);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 11px;">🧑‍✈️</div><div style="font-size:17px;font-weight:800;">Rajesh Kumar</div><div style="font-size:9px;color:var(--g7);font-family:var(--fm);">MAHINDRA LOGISTICS · MH04 AB 1234</div></div>'+
+    '<div class="dr-card"><div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">'+
+      '<div style="text-align:center;background:var(--g3);border-radius:var(--r2);padding:11px;"><div style="font-size:20px;font-weight:800;color:var(--green);">91%</div><div style="font-size:8px;color:var(--g7);">ON-TIME RATE</div></div>'+
+      '<div style="text-align:center;background:var(--g3);border-radius:var(--r2);padding:11px;"><div style="font-size:20px;font-weight:800;">14</div><div style="font-size:8px;color:var(--g7);">TRIPS THIS MONTH</div></div>'+
+      '<div style="text-align:center;background:var(--g3);border-radius:var(--r2);padding:11px;"><div style="font-size:20px;font-weight:800;">12,430</div><div style="font-size:8px;color:var(--g7);">KM THIS MONTH</div></div>'+
+      '<div style="text-align:center;background:var(--g3);border-radius:var(--r2);padding:11px;"><div style="font-size:20px;font-weight:800;color:var(--green);">Dec 26</div><div style="font-size:8px;color:var(--g7);">LICENSE VALID</div></div>'+
+    '</div></div>'+
+    '<button class="btn btn-g btn-full" onclick="doLogout()">Sign Out</button>'+
+  '</div>';
+}
+
+// ─── VOICE ALERT ───
+function speakVoice(){
+  if(!window.speechSynthesis) return;
+  var L=getLang();
+  var u=new SpeechSynthesisUtterance(L.voiceMsg);
+  u.lang=L.code; u.rate=0.82; u.pitch=1.0;
+  window.speechSynthesis.speak(u);
+  toast('Voice Alert','Route change announced in '+(curData.lang||'Hindi'),'🔊','');
+}
+
+// ─── NOTIFICATIONS ───
+function showNotifs(){
+  showModal('<h3>🔔 Notifications</h3>'+
+    ALERT_DATA.slice(0,4).map(function(a){
+      return '<div style="display:flex;gap:7px;padding:8px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;">'+a.ico+'</span><div style="flex:1;"><div style="font-size:11px;font-weight:700;margin-bottom:1px;">'+a.title+'</div><div style="font-size:9px;color:var(--g7);">'+a.ago+'</div></div><span class="badge '+(a.type==='crit'?'bd-r':a.type==='warn'?'bd-y':'bd-w')+'">'+(a.type==='crit'?'CRITICAL':a.type==='warn'?'WARNING':'INFO')+'</span></div>';
+    }).join('')+
+    '<div class="mbts" style="margin-top:13px;"><button class="btn btn-p btn-sm" onclick="go(\'alerts\');closeModal()">View All →</button><button class="btn btn-g btn-sm" onclick="closeModal()">Close</button></div>');
+}
+
+// ─── MODAL ───
+function showModal(html){
+  document.getElementById('modal-box').innerHTML=html;
+  document.getElementById('modal-bg').classList.remove('hidden');
+}
+function closeModal(e){
+  if(!e||e.target===document.getElementById('modal-bg'))
+    document.getElementById('modal-bg').classList.add('hidden');
+}
+
+// ─── TOAST ───
+function toast(title,msg,icon,type){
+  var c=document.getElementById('toasts');
+  var t=document.createElement('div');
+  t.className='toast '+(type==='crit'?'toast-crit':type==='warn'?'toast-warn':type==='safe'?'toast-safe':'');
+  t.innerHTML='<div class="t-ico">'+(icon||'ℹ️')+'</div><div><div class="t-title">'+title+'</div><div class="t-msg">'+msg+'</div></div>';
+  c.appendChild(t);
+  setTimeout(function(){t.style.cssText='opacity:0;transform:translateX(50px);transition:all .2s';setTimeout(function(){t.remove();},200);},4200);
+}
+
+// ─── DEMO ───
+function runDemo(){
+  setTimeout(function(){toast('Demo Active','Simulating live NH48 cascade event...','🎬','');},800);
+  setTimeout(function(){toast('Signal Detected','TomTom: NH48 traffic → BLOCKED (severity 9/10)','📡','warn');},2800);
+  setTimeout(function(){toast('AI Analysis','CargoMind analyzing 5 impacted shipments...','🤖','');},4800);
+  setTimeout(function(){toast('Cascade Detected','Gujarat Flood → 3 trucks blocked → ₹4.2Cr at risk','🔗','crit');},6800);
+  setTimeout(function(){toast('Decision Required','Your approval needed — check dashboard','⚠️','warn');},8800);
+}
+
+// ─── RESPONSIVE ───
+window.addEventListener('resize',function(){
+  if(window.innerWidth>880) document.getElementById('sidebar').classList.remove('mob-on');
+  // Invalidate all maps on resize
+  setTimeout(function(){
+    Object.values(mapInstances).forEach(function(m){try{m.invalidateSize();}catch(e){}});
+  },300);
+});
+document.addEventListener('click',function(e){
+  if(window.innerWidth<=880){
+    var sb=document.getElementById('sidebar');
+    var hb=document.querySelector('.hburg');
+    if(sb&&hb&&!sb.contains(e.target)&&!hb.contains(e.target)) sb.classList.remove('mob-on');
+  }
+});
+</script>
+</body>
+</html>
